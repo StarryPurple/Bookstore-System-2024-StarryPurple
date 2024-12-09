@@ -52,17 +52,11 @@ Possible commands:
    
    Give a visitor an access.
 
-9. Log [--all] 
+9. Log [--all]  [--staff] [--profit] [--sales] [--restock]
    
-   to be continued
+   Shopkeeper access required.
    
-   
-
-
-
-
-
-
+   echo out the latest logs according to the limitation of parameters.
 
 
 
