@@ -50,7 +50,9 @@ class Fpointer {
 public:
   friend Fstream<StorageType, elementCount>;
 
-  Fpointer() = delete;
+  // the default constructor set offset_ = elementCount
+  // to ensure that the uninitialized Fpointer is invalid.
+  Fpointer();
   Fpointer(offsetType offset);
   ~Fpointer() = default;
 

@@ -5,6 +5,9 @@ using StarryPurple_Exceptions::FileExceptions;
 namespace StarryPurple_FileIO {
 
 template<class StorageType, size_t elementCount>
+Fpointer<StorageType, elementCount>::Fpointer(): offset_(elementCount) {}
+
+template<class StorageType, size_t elementCount>
 Fpointer<StorageType, elementCount>::Fpointer(offsetType offset): offset_(offset) {}
 
 template<class StorageType, size_t elementCount>
@@ -23,7 +26,7 @@ void Fstream<StorageType, elementCount>::open(const filenameType &filename) {
     // file already exist.
     // read in info.
     file_.seekg(0, std::ios::beg);
-    file_.read(reinterpret_cast<char *>(&lru_loc_), sizeof(size_t));
+    file_.read(reinterpret_cast<char *>(&lru_loc_), sizeof(offsetType));
     for(size_t i = 0; i < elementCount; i++)
       file_.read(reinterpret_cast<char *>(&bitmap_[i]), sizeof(bool));
   } else {
@@ -34,7 +37,7 @@ void Fstream<StorageType, elementCount>::open(const filenameType &filename) {
     file_.open(filename, std::ios::binary | std::ios::in | std::ios::out);
     file_.seekp(0, std::ios::beg);
     lru_loc_ = 0;
-    file_.write(reinterpret_cast<const char *>(&lru_loc_), sizeof(size_t));
+    file_.write(reinterpret_cast<const char *>(&lru_loc_), sizeof(offsetType));
     for(size_t i = 0; i < elementCount; i++) {
       bitmap_[i] = false;
       file_.write(reinterpret_cast<const char *>(&bitmap_[i]), sizeof(bool));
@@ -50,7 +53,7 @@ void Fstream<StorageType, elementCount>::close() {
   if(!file_.is_open())
     throw FileExceptions("Closing file while no file is open");
   file_.seekp(0, std::ios::beg);
-  file_.write(reinterpret_cast<const char *>(&lru_loc_), sizeof(size_t));
+  file_.write(reinterpret_cast<const char *>(&lru_loc_), sizeof(offsetType));
   for(size_t i = 0; i < elementCount; i++)
     file_.write(reinterpret_cast<const char *>(&bitmap_[i]), sizeof(bool));
   file_.close();
