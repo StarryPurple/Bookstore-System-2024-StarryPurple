@@ -11,7 +11,7 @@
 
 #include <stdexcept>
 
-namespace StarryPurple_Exceptions {
+namespace StarryPurple {
 
 class FileExceptions: std::exception {
 
@@ -25,7 +25,7 @@ private:
   std::string exception_info_ = "File error: ";
 };
 
-}
+} // namespace StarryPurple
 
 
 

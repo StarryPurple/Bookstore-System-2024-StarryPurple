@@ -32,7 +32,7 @@
 #include <cassert>
 #include <cstring>
 
-namespace StarryPurple_FileIO {
+namespace StarryPurple {
 
 using offsetType = size_t;
 using filenameType = std::string;
@@ -99,7 +99,7 @@ private:
   filenameType filename_;
 };
 
-} // namespace StarryPurple_FileIO
+} // namespace StarryPurple
 
 
 

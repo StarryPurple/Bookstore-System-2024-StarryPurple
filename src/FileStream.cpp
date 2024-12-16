@@ -1,8 +1,8 @@
 #include "FileStream.h"
 
-using StarryPurple_Exceptions::FileExceptions;
+using StarryPurple::FileExceptions;
 
-namespace StarryPurple_FileIO {
+namespace StarryPurple {
 
 template<class StorageType, size_t elementCount>
 Fpointer<StorageType, elementCount>::Fpointer(): offset_(elementCount) {}
@@ -146,4 +146,4 @@ void Fstream<StorageType, elementCount>::write(const StorageType &data, const fp
 }
 
 
-} // StarryPurple_FileIO
+} // namespace StarryPurple
