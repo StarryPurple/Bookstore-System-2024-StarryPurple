@@ -34,20 +34,10 @@
 
 namespace StarryPurple_FileIO {
 
-template<class T, typename = decltype(std::declval<T>()())>
-std::true_type has_default_constructor_identifier_helper(int);
-
-template<class T>
-std::false_type has_default_constructor_identifier_helper(...);
-
-template<class T>
-struct has_default_constructor_identifier: decltype(has_default_constructor_identifier_helper<T>(0)) {};
-
-
 using offsetType = size_t;
 using filenameType = std::string;
-constexpr size_t cMaxFileSize = 1 << 20; // 8 MB
-constexpr size_t cElementCount = 1 << 16;
+constexpr size_t cMaxFileSize = 1 << 21; // 16 MB
+constexpr size_t cElementCount = 1 << 14; // 16384, > 10000
 
 template<class StorageType, size_t elementCount> class Fpointer;
 template<class StorageType, size_t elementCount> class Fstream;
@@ -70,16 +60,14 @@ private:
 
 template<class StorageType, size_t elementCount = cElementCount>
 class Fstream {
-
-  static_assert(has_default_constructor_identifier<StorageType>::value,
-    "StorageType must have a default constructor.");
+  // allow for sizeof(StorageType) at approximately cMaxFileSize / cElementCount = 1 << 7 = 128
   static_assert(sizeof(size_t) + (sizeof(StorageType) + sizeof(bool)) * cElementCount <= cMaxFileSize);
 
 public:
   using fpointer = Fpointer<StorageType, elementCount>;
 
   Fstream() = default;
-  ~Fstream() = default;
+  ~Fstream();
 
   // open a file.
   // attention: filename should end with extension ".bsdat"
@@ -88,8 +76,9 @@ public:
   void close();
 
   // allocate a storage block and initial it with given object.
-  // If no object assigned, initialize it with an empty one.
-  fpointer allocate(const StorageType &data = StorageType());
+  fpointer allocate();
+  // allocate a storage block and initial it with an empty one.
+  fpointer allocate(const StorageType &data);
   // free the storage block.
   void free(const fpointer &ptr);
 

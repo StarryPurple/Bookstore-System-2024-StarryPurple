@@ -2,11 +2,11 @@
 
 namespace StarryPurple_Exceptions {
 
-FileExceptions::FileExceptions(std::string exception_info) {
+FileExceptions::FileExceptions(const std::string& exception_info) {
   exception_info_ += exception_info;
 }
 
-const char *FileExceptions::what() const {
+const char *FileExceptions::what() const noexcept {
   return exception_info_.c_str();
 }
 

@@ -8,6 +8,12 @@ template<class StorageType, size_t elementCount>
 Fpointer<StorageType, elementCount>::Fpointer(offsetType offset): offset_(offset) {}
 
 template<class StorageType, size_t elementCount>
+Fstream<StorageType, elementCount>::~Fstream() {
+  if(file_.is_open())
+    file_.close();
+}
+
+template<class StorageType, size_t elementCount>
 void Fstream<StorageType, elementCount>::open(const filenameType &filename) {
   filename_ = filename;
   if(file_.is_open())
@@ -23,8 +29,8 @@ void Fstream<StorageType, elementCount>::open(const filenameType &filename) {
   } else {
     // file doesn't initially exist.
     // create one and initialize it.
-    file_.open(filename, std::ios::binary | std::ios::out);
-    file_.close();
+    std::ofstream outfile(filename);
+    outfile.close();
     file_.open(filename, std::ios::binary | std::ios::in | std::ios::out);
     file_.seekp(0, std::ios::beg);
     lru_loc_ = 0;
@@ -35,7 +41,7 @@ void Fstream<StorageType, elementCount>::open(const filenameType &filename) {
     }
     StorageType placeholder;
     for(size_t i = 0; i < elementCount; i++)
-      file_.write(reinterpret_cast<const char *>(&placeholder));
+      file_.write(reinterpret_cast<const char *>(&placeholder), cStorageSize);
   }
 }
 
@@ -49,6 +55,31 @@ void Fstream<StorageType, elementCount>::close() {
     file_.write(reinterpret_cast<const char *>(&bitmap_[i]), sizeof(bool));
   file_.close();
 }
+
+template<class StorageType, size_t elementCount>
+typename Fstream<StorageType, elementCount>::fpointer
+Fstream<StorageType, elementCount>::allocate() {
+  if(!file_.is_open())
+    throw FileExceptions("Allocating storage while no file is open");
+  size_t loc = lru_loc_;
+  while(loc < elementCount && bitmap_[loc]) loc++;
+  if(loc != elementCount)
+    lru_loc_ = loc;
+  else {
+    loc = 0;
+    while(loc < lru_loc_ && bitmap_[loc]) loc++;
+    if(loc != elementCount)
+      lru_loc_ = loc;
+    else
+      throw FileExceptions("Storage is full in file \"" + filename_ + "\"");
+  }
+  StorageType placeholder{};
+  fpointer ptr{lru_loc_};
+  write(placeholder, ptr);
+  bitmap_[lru_loc_] = true;
+  return ptr;
+}
+
 
 template<class StorageType, size_t elementCount>
 typename Fstream<StorageType, elementCount>::fpointer
@@ -67,9 +98,9 @@ Fstream<StorageType, elementCount>::allocate(const StorageType &data) {
     else
       throw FileExceptions("Storage is full in file \"" + filename_ + "\"");
   }
-  fpointer ptr{lru_loc_};
+  fpointer ptr(lru_loc_);
+  bitmap_[lru_loc_] = true; // occupy it before call of "write"
   write(data, ptr);
-  bitmap_[lru_loc_] = true;
   return ptr;
 }
 
