@@ -5,10 +5,17 @@ using StarryPurple::FileExceptions;
 namespace StarryPurple {
 
 template<class StorageType, class InfoType, size_t elementCount>
-Fpointer<StorageType, InfoType, elementCount>::Fpointer(): offset_(elementCount) {}
+Fstream<StorageType, InfoType, elementCount>::fpointer::fpointer() {
+  setnull();
+}
 
 template<class StorageType, class InfoType, size_t elementCount>
-Fpointer<StorageType, InfoType, elementCount>::Fpointer(offsetType offset): offset_(offset) {}
+Fstream<StorageType, InfoType, elementCount>::fpointer::fpointer(offsetType offset): offset_(offset) {}
+
+template<class StorageType, class InfoType, size_t elementCount>
+void Fstream<StorageType, InfoType, elementCount>::fpointer::setnull() {
+  offset_ = elementCount;
+}
 
 template<class StorageType, class InfoType, size_t elementCount>
 Fstream<StorageType, InfoType, elementCount>::~Fstream() {

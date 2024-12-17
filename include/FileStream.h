@@ -43,26 +43,6 @@ using filenameType = std::string;
 constexpr size_t cMaxFileSize = 1 << 22; // 32 MB
 constexpr size_t cElementCount = 1 << 14; // 16384, > 10000
 
-template<class StorageType, class InfoType, size_t elementCount> class Fpointer;
-template<class StorageType, class InfoType, size_t elementCount> class Fstream;
-
-
-// @offset: the ordinal of the storage block.
-template<class StorageType, class InfoType, size_t elementCount>
-class Fpointer {
-
-public:
-  friend Fstream<StorageType, InfoType, elementCount>;
-
-  // the default constructor set offset_ = elementCount
-  // to ensure that the uninitialized Fpointer is invalid.
-  Fpointer();
-  Fpointer(offsetType offset);
-  ~Fpointer() = default;
-
-private:
-  const offsetType offset_;
-};
 
 template<class StorageType, class InfoType = size_t, size_t elementCount = cElementCount>
 class Fstream {
@@ -71,7 +51,25 @@ class Fstream {
     sizeof(InfoType) + sizeof(size_t) + (sizeof(StorageType) + sizeof(bool)) * cElementCount <= cMaxFileSize);
 
 public:
-  using fpointer = Fpointer<StorageType, InfoType, elementCount>;
+
+  // @offset: the ordinal of the storage block.
+  class fpointer {
+
+  public:
+    friend Fstream;
+
+    // the default constructor set offset_ = elementCount
+    // to ensure that the initial Fpointer is invalid, like nullptr.
+    fpointer();
+    fpointer(offsetType offset);
+    ~fpointer() = default;
+
+    void setnull();
+
+  private:
+    offsetType offset_ = elementCount;
+  };
+
 
   Fstream() = default;
   ~Fstream();
@@ -109,6 +107,7 @@ private:
   bool bitmap_[elementCount]{};
   std::fstream file_{};
   filenameType filename_;
+
 };
 
 } // namespace StarryPurple
