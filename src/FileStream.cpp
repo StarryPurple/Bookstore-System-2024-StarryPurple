@@ -4,20 +4,20 @@ using StarryPurple::FileExceptions;
 
 namespace StarryPurple {
 
-template<class StorageType, size_t elementCount>
-Fpointer<StorageType, elementCount>::Fpointer(): offset_(elementCount) {}
+template<class StorageType, class InfoType, size_t elementCount>
+Fpointer<StorageType, InfoType, elementCount>::Fpointer(): offset_(elementCount) {}
 
-template<class StorageType, size_t elementCount>
-Fpointer<StorageType, elementCount>::Fpointer(offsetType offset): offset_(offset) {}
+template<class StorageType, class InfoType, size_t elementCount>
+Fpointer<StorageType, InfoType, elementCount>::Fpointer(offsetType offset): offset_(offset) {}
 
-template<class StorageType, size_t elementCount>
-Fstream<StorageType, elementCount>::~Fstream() {
+template<class StorageType, class InfoType, size_t elementCount>
+Fstream<StorageType, InfoType, elementCount>::~Fstream() {
   if(file_.is_open())
     file_.close();
 }
 
-template<class StorageType, size_t elementCount>
-void Fstream<StorageType, elementCount>::open(const filenameType &filename) {
+template<class StorageType, class InfoType, size_t elementCount>
+void Fstream<StorageType, InfoType, elementCount>::open(const filenameType &filename) {
   filename_ = filename;
   if(file_.is_open())
     throw FileExceptions("Opening unclosed file \"" + filename + "\"" );
@@ -26,6 +26,7 @@ void Fstream<StorageType, elementCount>::open(const filenameType &filename) {
     // file already exist.
     // read in info.
     file_.seekg(0, std::ios::beg);
+    file_.read(reinterpret_cast<char *>(&extra_info_), cExtraInfoSize);
     file_.read(reinterpret_cast<char *>(&lru_loc_), sizeof(offsetType));
     for(size_t i = 0; i < elementCount; i++)
       file_.read(reinterpret_cast<char *>(&bitmap_[i]), sizeof(bool));
@@ -36,6 +37,8 @@ void Fstream<StorageType, elementCount>::open(const filenameType &filename) {
     outfile.close();
     file_.open(filename, std::ios::binary | std::ios::in | std::ios::out);
     file_.seekp(0, std::ios::beg);
+    extra_info_ = InfoType();
+    file_.write(reinterpret_cast<const char *>(&extra_info_), cExtraInfoSize);
     lru_loc_ = 0;
     file_.write(reinterpret_cast<const char *>(&lru_loc_), sizeof(offsetType));
     for(size_t i = 0; i < elementCount; i++) {
@@ -48,20 +51,21 @@ void Fstream<StorageType, elementCount>::open(const filenameType &filename) {
   }
 }
 
-template<class StorageType, size_t elementCount>
-void Fstream<StorageType, elementCount>::close() {
+template<class StorageType, class InfoType, size_t elementCount>
+void Fstream<StorageType, InfoType, elementCount>::close() {
   if(!file_.is_open())
     throw FileExceptions("Closing file while no file is open");
   file_.seekp(0, std::ios::beg);
+  file_.write(reinterpret_cast<const char *>(&extra_info_), cExtraInfoSize);
   file_.write(reinterpret_cast<const char *>(&lru_loc_), sizeof(offsetType));
   for(size_t i = 0; i < elementCount; i++)
     file_.write(reinterpret_cast<const char *>(&bitmap_[i]), sizeof(bool));
   file_.close();
 }
 
-template<class StorageType, size_t elementCount>
-typename Fstream<StorageType, elementCount>::fpointer
-Fstream<StorageType, elementCount>::allocate() {
+template<class StorageType, class InfoType, size_t elementCount>
+typename Fstream<StorageType, InfoType, elementCount>::fpointer
+Fstream<StorageType, InfoType, elementCount>::allocate() {
   if(!file_.is_open())
     throw FileExceptions("Allocating storage while no file is open");
   size_t loc = lru_loc_;
@@ -84,9 +88,9 @@ Fstream<StorageType, elementCount>::allocate() {
 }
 
 
-template<class StorageType, size_t elementCount>
-typename Fstream<StorageType, elementCount>::fpointer
-Fstream<StorageType, elementCount>::allocate(const StorageType &data) {
+template<class StorageType, class InfoType, size_t elementCount>
+typename Fstream<StorageType, InfoType, elementCount>::fpointer
+Fstream<StorageType, InfoType, elementCount>::allocate(const StorageType &data) {
   if(!file_.is_open())
     throw FileExceptions("Allocating storage while no file is open");
   size_t loc = lru_loc_;
@@ -101,14 +105,14 @@ Fstream<StorageType, elementCount>::allocate(const StorageType &data) {
     else
       throw FileExceptions("Storage is full in file \"" + filename_ + "\"");
   }
-  fpointer ptr(lru_loc_);
-  bitmap_[lru_loc_] = true; // occupy it before call of "write"
+  fpointer ptr{lru_loc_};
+  bitmap_[lru_loc_] = true; // occupy the block before call of "write"
   write(data, ptr);
   return ptr;
 }
 
-template<class StorageType, size_t elementCount>
-void Fstream<StorageType, elementCount>::free(const fpointer &ptr) {
+template<class StorageType, class InfoType, size_t elementCount>
+void Fstream<StorageType, InfoType, elementCount>::free(const fpointer &ptr) {
   if(!file_.is_open())
     throw FileExceptions("Freeing storage while no file is open");
   const offsetType offset = ptr.offset_; // ??? why I can use it without friend class declaration?
@@ -119,8 +123,8 @@ void Fstream<StorageType, elementCount>::free(const fpointer &ptr) {
   bitmap_[offset] = false;
 }
 
-template<class StorageType, size_t elementCount>
-void Fstream<StorageType, elementCount>::read(StorageType &data, const fpointer &ptr) {
+template<class StorageType, class InfoType, size_t elementCount>
+void Fstream<StorageType, InfoType, elementCount>::read(StorageType &data, const fpointer &ptr) {
   if(!file_.is_open())
     throw FileExceptions("Reading storage while no file is open");
   const offsetType offset = ptr.offset_;
@@ -132,8 +136,8 @@ void Fstream<StorageType, elementCount>::read(StorageType &data, const fpointer 
   file_.read(reinterpret_cast<char *>(&data), cStorageSize);
 }
 
-template<class StorageType, size_t elementCount>
-void Fstream<StorageType, elementCount>::write(const StorageType &data, const fpointer &ptr) {
+template<class StorageType, class InfoType, size_t elementCount>
+void Fstream<StorageType, InfoType, elementCount>::write(const StorageType &data, const fpointer &ptr) {
   if(!file_.is_open())
     throw FileExceptions("Writing on storage while no file is open");
   const offsetType offset = ptr.offset_;
@@ -144,6 +148,21 @@ void Fstream<StorageType, elementCount>::write(const StorageType &data, const fp
   file_.seekp(cInfoSize + cStorageSize * offset, std::ios::beg);
   file_.write(reinterpret_cast<const char *>(&data), cStorageSize);
 }
+
+template<class StorageType, class InfoType, size_t elementCount>
+void Fstream<StorageType, InfoType, elementCount>::read_info(InfoType &info) {
+  if(!file_.is_open())
+    throw FileExceptions("Reading info while no file is open");
+  info = extra_info_;
+}
+
+template<class StorageType, class InfoType, size_t elementCount>
+void Fstream<StorageType, InfoType, elementCount>::write_info(const InfoType &info) {
+  if(!file_.is_open())
+    throw FileExceptions("Writing on info while no file is open");
+  extra_info_ = info;
+}
+
 
 
 } // namespace StarryPurple
