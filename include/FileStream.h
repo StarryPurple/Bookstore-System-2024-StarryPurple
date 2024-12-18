@@ -65,6 +65,7 @@ public:
     ~fpointer() = default;
 
     void setnull();
+    bool isnull() const;
 
   private:
     offsetType offset_ = elementCount;

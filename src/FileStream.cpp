@@ -18,6 +18,18 @@ void Fstream<StorageType, InfoType, elementCount>::fpointer::setnull() {
 }
 
 template<class StorageType, class InfoType, size_t elementCount>
+bool Fstream<StorageType, InfoType, elementCount>::fpointer::isnull() const {
+  return offset_ == elementCount;
+}
+
+
+
+
+
+
+
+
+template<class StorageType, class InfoType, size_t elementCount>
 Fstream<StorageType, InfoType, elementCount>::~Fstream() {
   if(file_.is_open())
     file_.close();
