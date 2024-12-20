@@ -10,6 +10,12 @@ Fstream<StorageType, InfoType, elementCount>::fpointer::fpointer() {
 }
 
 template<class StorageType, class InfoType, size_t elementCount>
+Fstream<StorageType, InfoType, elementCount>::fpointer::fpointer(nullptr_t) {
+  setnull();
+}
+
+
+template<class StorageType, class InfoType, size_t elementCount>
 Fstream<StorageType, InfoType, elementCount>::fpointer::fpointer(offsetType offset): offset_(offset) {}
 
 template<class StorageType, class InfoType, size_t elementCount>

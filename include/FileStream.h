@@ -61,7 +61,8 @@ public:
     // the default constructor set offset_ = elementCount
     // to ensure that the initial Fpointer is invalid, like nullptr.
     fpointer();
-    fpointer(offsetType offset);
+    explicit fpointer(nullptr_t);
+    explicit fpointer(offsetType offset);
     ~fpointer() = default;
 
     void setnull();

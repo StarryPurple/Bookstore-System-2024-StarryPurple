@@ -25,6 +25,18 @@ private:
   std::string exception_info_ = "File error: ";
 };
 
+class BLinkTreeExceptions: std::exception {
+
+public:
+  BLinkTreeExceptions() = delete;
+  BLinkTreeExceptions(const std::string& exception_info);
+  ~BLinkTreeExceptions() = default;
+  const char *what() const noexcept override;
+
+private:
+  std::string exception_info_ = "B-link tree error: ";
+};
+
 } // namespace StarryPurple
 
 
