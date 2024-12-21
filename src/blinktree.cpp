@@ -3,15 +3,21 @@
 namespace StarryPurple {
 
 template<class KeyType, class ValueType, size_t degree, size_t elementCount>
+BLinkTree<KeyType, ValueType, degree, elementCount>::VlistNode::VlistNode(
+  const ValueType &value, const VlistPtr &next_ptr)
+  :value_(value), next_ptr_(next_ptr) {}
+
+template<class KeyType, class ValueType, size_t degree, size_t elementCount>
 BLinkTree<KeyType, ValueType, degree, elementCount>::~BLinkTree() {
   if(is_open) close();
 }
 
 template<class KeyType, class ValueType, size_t degree, size_t elementCount>
-void BLinkTree<KeyType, ValueType, degree, elementCount>::open(const filenameType &map_filename, const filenameType &key_filename, const filenameType &value_filename) {
+void BLinkTree<KeyType, ValueType, degree, elementCount>::open(
+  const filenameType &map_filename, const filenameType &key_filename, const filenameType &vlist_filename) {
   map_fstream_.open(map_filename);
   key_fstream_.open(key_filename);
-  value_fstream_.open(value_filename);
+  vlist_fstream_.open(vlist_filename);
   is_open = true;
 
   map_fstream_.read_info(root_ptr_);
@@ -23,20 +29,34 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::close() {
 
   map_fstream_.close();
   key_fstream_.close();
-  value_fstream_.close();
+  vlist_fstream_.close();
   is_open = false;
 }
 
 template<class KeyType, class ValueType, size_t degree, size_t elementCount>
-std::pair<typename BLinkTree<KeyType, ValueType, degree, elementCount>::MnodePtr, size_t>
-BLinkTree<KeyType, ValueType, degree, elementCount>::lower_bound(const KeyType &key) {
-  if(root_ptr_.isnull()) return {nullptr, 0};
+std::vector<std::pair<typename BLinkTree<KeyType, ValueType, degree, elementCount>::MnodePtr, size_t>>
+BLinkTree<KeyType, ValueType, degree, elementCount>::lower_bound_route(const KeyType &key) {
+  std::vector<std::pair<MnodePtr, size_t>> route;
+  if(root_ptr_.isnull()) {
+    return route;
+  }
   MnodePtr mnode_ptr = root_ptr_;
   MapNode mnode; map_fstream_.read(mnode, mnode_ptr);
+  if(key > mnode.high_key_) {
+    MnodePtr cur_ptr = root_ptr_;
+    MapNode cur_node; map_fstream_.read(cur_node, cur_ptr);
+    while(!cur_node.is_leaf_) {
+      route.emplace_back({cur_ptr, cur_node.node_size_ - 1});
+      cur_ptr = cur_node.mnode_ptr_[cur_node.node_size_ - 1];
+      map_fstream_.read(cur_node, cur_ptr);
+    }
+    route.emplace_back({cur_ptr, degree + 1});
+    return route;
+  }
   while(true) {
     if(key > mnode.high_key_) {
+      // shouldn't reach nullptr
       mnode_ptr = mnode.link_ptr_;
-      if(mnode_ptr.isnull()) return {nullptr, 0};
       map_fstream_.read(mnode, mnode_ptr);
       continue;
     }
@@ -48,22 +68,37 @@ BLinkTree<KeyType, ValueType, degree, elementCount>::lower_bound(const KeyType &
       if(key < helper_key) r = mid;
       else l = mid + 1;
     }
-    if(mnode.is_leaf) return {mnode_ptr, l};
+    route.emplace_back({mnode_ptr, l});
+    if(mnode.is_leaf) return route;
     mnode_ptr = mnode.mnode_ptr_[l];
     map_fstream_.read(mnode, mnode_ptr);
   }
 }
 
 template<class KeyType, class ValueType, size_t degree, size_t elementCount>
-std::pair<typename BLinkTree<KeyType, ValueType, degree, elementCount>::MnodePtr, size_t>
-BLinkTree<KeyType, ValueType, degree, elementCount>::upper_bound(const KeyType &key) {
-  if(root_ptr_.isnull()) return {nullptr, 0};
+std::vector<std::pair<typename BLinkTree<KeyType, ValueType, degree, elementCount>::MnodePtr, size_t>>
+BLinkTree<KeyType, ValueType, degree, elementCount>::upper_bound_route(const KeyType &key) {
+  std::vector<std::pair<MnodePtr, size_t>> route;
+  if(root_ptr_.isnull()) {
+    return route;
+  }
   MnodePtr mnode_ptr = root_ptr_;
   MapNode mnode; map_fstream_.read(mnode, mnode_ptr);
+  if(key > mnode.high_key_) {
+    MnodePtr cur_ptr = root_ptr_;
+    MapNode cur_node; map_fstream_.read(cur_node, cur_ptr);
+    while(!cur_node.is_leaf_) {
+      route.emplace_back({cur_ptr, cur_node.node_size_ - 1});
+      cur_ptr = cur_node.mnode_ptr_[cur_node.node_size_ - 1];
+      map_fstream_.read(cur_node, cur_ptr);
+    }
+    route.emplace_back({cur_ptr, degree + 1});
+    return route;
+  }
   while(true) {
     if(key > mnode.high_key_) {
+      // shouldn't reach nullptr
       mnode_ptr = mnode.link_ptr_;
-      if(mnode_ptr.isnull()) return {nullptr, 0};
       map_fstream_.read(mnode, mnode_ptr);
       continue;
     }
@@ -75,7 +110,8 @@ BLinkTree<KeyType, ValueType, degree, elementCount>::upper_bound(const KeyType &
       if(key > helper_key) l = mid + 1;
       else r = mid;
     }
-    if(mnode.is_leaf) return {mnode_ptr, l};
+    route.emplace_back({mnode_ptr, l});
+    if(mnode.is_leaf) return route;
     mnode_ptr = mnode.mnode_ptr_[l];
     map_fstream_.read(mnode, mnode_ptr);
   }
@@ -233,10 +269,248 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::split(const MnodePtr &
   parent_node.key_ptr_[pos + 1] = parent_node.key_ptr_[pos];
   parent_node.key_ptr_[pos] = left_node.key_ptr_[left_node.node_size_ - 1];
   parent_node.mnode_ptr_[pos + 1] = right_ptr;
+  ++parent_node.node_size_;
 
   // parent_node modified.
   map_fstream_.write(parent_node, parent_ptr);
 }
+
+template<class KeyType, class ValueType, size_t degree, size_t elementCount>
+void BLinkTree<KeyType, ValueType, degree, elementCount>::insert(const KeyType &key, const ValueType &value) {
+  if(root_ptr_.isnull()) {
+    // empty tree.
+    // just create a root node.
+
+    MapNode root_node;
+    root_node.is_leaf_ = true;
+    root_node.node_size_ = 1;
+    root_node.high_key_ = key;
+    root_node.parent_ptr_.setnull();
+    root_node.link_ptr_.setnull();
+    root_node.key_ptr_[0] = key_fstream_.allocate(key);
+    root_node.vlist_ptr_[0] = vlist_fstream_.allocate(VlistNode(value, nullptr));
+
+    root_ptr_ = map_fstream_.allocate(root_node);
+    return;
+  }
+  std::vector<std::pair<MnodePtr, size_t>> route = upper_bound_route(key);
+  // route can't be empty, for tree can't be empty.
+  auto [leaf_ptr, pos] = route.back();
+  route.pop_back();
+  MnodePtr cur_ptr = leaf_ptr;
+  MapNode cur_node; map_fstream_.read(cur_node, cur_ptr);
+  if(pos == degree + 1) {
+    // This key doesn't exist, and it's bigger than any existing key
+    cur_node.key_ptr_[cur_node.node_size_] = key_fstream_.allocate(key);
+    cur_node.vlist_ptr_[cur_node.node_size_] = vlist_fstream_.allocate(VlistNode(value, nullptr));
+    cur_node.high_key_ = key;
+    ++cur_node.node_size_;
+    map_fstream_.write(cur_node, cur_ptr);
+  } else {
+    KeyType helper_key;
+    key_fstream_.read(helper_key, cur_node.key_ptr_[pos]);
+    if(key != helper_key) {
+      // This key doesn't exist, but there is a key bigger than it.
+      for(size_t i = cur_node.node_size_; i > pos; ++i) {
+        cur_node.key_ptr_[i] = cur_node.key_ptr_[i - 1];
+        cur_node.vlist_ptr_[i] = cur_node.vlist_ptr_[i - 1];
+      }
+      cur_node.key_ptr_[pos] = key_fstream_.allocate(key);
+      cur_node.vlist_ptr_[pos] = vlist_fstream_.allocate(VlistNode(value, nullptr));
+      ++cur_node.node_size_;
+      map_fstream_.write(cur_node, cur_ptr);
+    } else {
+      // This key already exists.
+      VlistPtr cur_vlist_ptr = cur_node.vlist_ptr_[pos];
+      if(cur_vlist_ptr.isnull()) {
+        // should not happen.
+        throw BLinkTreeExceptions("Empty key still exists");
+        cur_node.vlist_ptr_[pos] = vlist_fstream_.allocate(VlistNode(value, nullptr));
+        map_fstream_.write(cur_node, cur_ptr);
+      } else {
+        VlistNode cur_vlist_node; vlist_fstream_.read(cur_vlist_node, cur_vlist_ptr);
+        if(value == cur_vlist_node.value_)
+          throw BLinkTreeExceptions("Inserting duplicated key-value pair");
+        if(value < cur_vlist_node.value_) {
+          VlistPtr new_vlist_ptr = vlist_fstream_.allocate(VlistNode(value, cur_vlist_ptr));
+          cur_node.vlist_ptr_[pos] = new_vlist_ptr;
+          map_fstream_.write(cur_node, cur_ptr);
+        } else {
+          VlistPtr nxt_vlist_ptr = cur_vlist_node.next_ptr_;
+          VlistNode nxt_vlist_node;
+          while(true) {
+            if(nxt_vlist_ptr.isnull()) {
+              cur_vlist_node.next_ptr_ = vlist_fstream_.allocate(VlistNode(value, nullptr));
+              vlist_fstream_.write(cur_vlist_node, cur_vlist_ptr);
+              break;
+            }
+            vlist_fstream_.read(nxt_vlist_node, nxt_vlist_ptr);
+            if(value == nxt_vlist_node.value_)
+              throw BLinkTreeExceptions("Inserting duplicated key-value pair");
+            if(value < nxt_vlist_node.value_) {
+              cur_vlist_node.next_ptr_ = vlist_fstream_.allocate(VlistNode(value, nxt_vlist_ptr));
+              vlist_fstream_.write(cur_vlist_node, cur_vlist_ptr);
+
+            }
+            cur_vlist_ptr = nxt_vlist_ptr;
+            cur_vlist_node = nxt_vlist_node;
+            nxt_vlist_ptr = cur_vlist_node.next_ptr_;
+          }
+        }
+      }
+    }
+  }
+
+  // split.
+  while(cur_node.node_size_ == degree) {
+    // MapNode split is required.
+    if(route.empty()) {
+      // cur_node = root_node_ now.
+      // create a new root node.
+      // map_fstream.read(root_node, root_ptr_); assert(root_node == cur_node);
+      MapNode root_node;
+      MnodePtr cur_root_ptr = root_ptr_;
+      root_node.is_leaf_ = false; // never a leaf: the tree isn't empty
+      root_node.node_size_ = 1;
+      root_node.high_key_ = cur_node.high_key_;
+      root_node.key_ptr_[0] = cur_node.key_ptr_[cur_node.node_size_ - 1];
+      root_node.mnode_ptr_[0] = cur_root_ptr;
+      root_ptr_ = map_fstream_.allocate(root_node);
+      cur_node.parent_ptr_ = root_ptr_; map_fstream_.write(cur_node, cur_root_ptr);
+      split(root_ptr_, 0);
+      return;
+    }
+    auto [parent_ptr, pos] = route.back();
+    route.pop();
+    split(parent_ptr, pos);
+    map_fstream_.read(cur_node, parent_ptr);
+  }
+}
+
+
+template<class KeyType, class ValueType, size_t degree, size_t elementCount>
+std::vector<ValueType> BLinkTree<KeyType, ValueType, degree, elementCount>::find(const KeyType &key) {
+  std::vector<ValueType> res;
+  std::vector<std::pair<MnodePtr, size_t>> route = upper_bound_route(key);
+  if(route.empty()) return res; // nothing found.
+  auto [leaf_ptr, pos] = route.back();
+  if(pos == degree + 1) return res; // nothing found.
+  MapNode map_node; map_fstream_.read(map_node, leaf_ptr);
+  KeyType key_found; key_fstream_.read(key_found, map_node.key_ptr_[pos]);
+  if(key != key_found) return res; // not found. maybe "key < key_found"?
+  VlistPtr cur_vlist_ptr = map_node.vlist_ptr_[pos];
+  VlistNode cur_vlist_node;
+  while(!cur_vlist_ptr.isnull()) {
+    vlist_fstream_.read(cur_vlist_node, cur_vlist_ptr);
+    res.emplace_back(cur_vlist_node.value_);
+    cur_vlist_ptr = cur_vlist_node.next_ptr_;
+  }
+  return res;
+}
+
+template<class KeyType, class ValueType, size_t degree, size_t elementCount>
+void BLinkTree<KeyType, ValueType, degree, elementCount>::erase(const KeyType &key, const ValueType &value) {
+  if(root_ptr_.isnull()) return; // nothing to delete.
+  std::vector<std::pair<MnodePtr, size_t>> route = upper_bound_route(key);
+  // route can't be empty, for tree is not empty
+  auto [leaf_ptr, pos] = route.back();
+  route.pop_back();
+  if(pos == degree + 1) return; // nothing to delete.
+  MnodePtr cur_ptr = leaf_ptr;
+  MapNode cur_node; map_fstream_.read(cur_node, cur_ptr);
+  VlistPtr cur_vlist_ptr = cur_node.vlist_ptr_[pos];
+  if(cur_vlist_ptr.isnull()) {
+    // shouldn't have been here.
+    throw BLinkTreeExceptions("Empty key still exists.");
+    return; // nothing to delete
+  }
+  VlistNode cur_vlist_node; vlist_fstream_.read(cur_vlist_node, cur_vlist_ptr);
+  VlistPtr nxt_vlist_ptr = cur_vlist_node.next_ptr_;
+  if(nxt_vlist_ptr.isnull()) {
+    if(value == cur_vlist_node.value_) {
+      vlist_fstream_.free(cur_vlist_ptr);
+      // todo: delete this key
+      for(size_t i = pos; i < cur_node.node_size_ - 1; ++i) {
+        // leaf_node
+        cur_node.key_ptr_[i] = cur_node.key_ptr_[i + 1];
+        cur_node.vlist_ptr_[i] = cur_vlist_node[i + 1];
+      }
+      --cur_node.node_size_;
+      cur_node.key_ptr_[cur_node.node_size_].setnull();
+      cur_node.vlist_ptr_[cur_node.node_size_].setnull();
+      if(cur_ptr == root_ptr_) {
+        // only check if the tree is empty
+        if(cur_node.node_size_ == 0) {
+          map_fstream_.free(cur_ptr);
+          root_ptr_.setnull();
+          return;
+        }
+      }
+      // now cur_node.node_size >= degree / 2 - 1 >= 2. (with degree >= 6)
+      if(pos == cur_node.node_size_)
+        key_fstream_.read(cur_node.high_key_, cur_node.key_ptr_[cur_node.node_size_ - 1]);
+      map_fstream_.write(cur_node, cur_ptr);
+      while(true) {
+        // handle with MapNodes that is too small.
+        if(cur_node.node_size_ >= degree / 2) return;
+        if(route.empty()) {
+          // we accept a root node with 1 ~ degree / 2 - 1 nodes.
+          return;
+        }
+        auto [parent_ptr, pos] = route.back();
+        route.pop_back();
+        MapNode parent_node; vlist_fstream_.read(parent_node, parent_ptr);
+        if(pos > 0) {
+          // use left.
+          MapNode left_node; vlist_fstream_.read(left_node, parent_node.mnode_ptr_[pos - 1]);
+          if(left_node.node_size_ >= degree / 2) {
+            move_from_left(parent_ptr, pos);
+            return;
+          } else {
+            merge(parent_ptr, pos - 1);
+            // try modified parent_node
+            map_fstream_.read(cur_node, parent_ptr);
+            continue;
+          }
+        }
+        if(pos < cur_node.node_size_ - 1) {
+          // try right.
+          MapNode right_node; vlist_fstream_.read(right_node, parent_node.mnode_ptr_[pos + 1]);
+          if(right_node.node_size_ >= degree / 2) {
+            move_from_right(parent_ptr, pos);
+            return;
+          } else {
+            merge(parent_ptr, pos);
+            // try modified parent_node
+            map_fstream_.read(cur_node, parent_ptr);
+            continue;
+          }
+        }
+        throw BLinkTreeExceptions("inner node size < 2");
+      }
+    }
+    return;
+  }
+  if(value == cur_vlist_node.value_) {
+    cur_node.vlist_ptr_[pos] = nxt_vlist_ptr;
+    vlist_fstream_.free(cur_vlist_ptr);
+    return;
+  }
+  VlistNode nxt_vlist_node;
+  while(!nxt_vlist_ptr.isnull()) {
+    vlist_fstream_.read(nxt_vlist_node, nxt_vlist_ptr);
+    if(value == nxt_vlist_node.value_) {
+      cur_vlist_node.next_ptr_ = nxt_vlist_node.next_ptr_;
+      vlist_fstream_.free(nxt_vlist_ptr);
+      return;
+    }
+    cur_vlist_ptr = nxt_vlist_ptr;
+    cur_vlist_node = nxt_vlist_node;
+    nxt_vlist_ptr = cur_vlist_node.next_ptr_;
+  }
+  // this key-value doesn't exist.
+}
+
 
 
 
