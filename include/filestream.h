@@ -1,4 +1,4 @@
-/** FileStream.h
+/** filestream.h
  * Author: StarryPurple
  * Date: Since 2024.12.16
  *
@@ -47,6 +47,7 @@ constexpr size_t cElementCount = 1 << 14; // 16384, > 10000
 template<class StorageType, class InfoType = size_t, size_t elementCount = cElementCount>
 class Fstream {
   // allow for sizeof(StorageType) at approximately cMaxFileSize / cElementCount = 1 << 7 = 128
+  // smaller than 4KB ~ 4096
   static_assert(
     sizeof(InfoType) + sizeof(size_t) + (sizeof(StorageType) + sizeof(bool)) * cElementCount <= cMaxFileSize);
 
