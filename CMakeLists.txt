@@ -4,11 +4,13 @@ project(Bookstore_StarryPurple)
 set(CMAKE_CXX_STANDARD 20)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(${PROJECT_SOURCE_DIR}/src)
 
-file(GLOB_RECURSE src_list src/*.cpp)
+#file(GLOB_RECURSE src_list src/*.cpp)
 
 add_executable(code
         Main.cpp
         src/BookStoreExceptions.cpp
         src/filestream.cpp
-        src/fmultimap.cpp)
+        src/fmultimap.cpp
+        src/validator.cpp)

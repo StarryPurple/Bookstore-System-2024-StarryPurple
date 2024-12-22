@@ -205,7 +205,7 @@ void Fmultimap<KeyType, ValueType, degree, elementCount>::move_from_right(const 
     for(size_t i = 0; i < right_node.node_size_ - 1; ++i)
       right_node.vlist_ptr_[i] = right_node.vlist_ptr_[i + 1];
   } else {
-    left_node.mnode_ptr_[left_node.node_size_] = right_node.vlist_ptr_[0];
+    left_node.mnode_ptr_[left_node.node_size_] = right_node.mnode_ptr_[0];
     for(size_t i = 0; i < right_node.node_size_ - 1; ++i)
       right_node.mnode_ptr_[i] = right_node.mnode_ptr_[i + 1];
   }
@@ -363,7 +363,7 @@ void Fmultimap<KeyType, ValueType, degree, elementCount>::insert(const KeyType &
             if(value < nxt_vlist_node.value_) {
               cur_vlist_node.next_ptr_ = vlist_fstream_.allocate(VlistNode(value, nxt_vlist_ptr));
               vlist_fstream_.write(cur_vlist_node, cur_vlist_ptr);
-
+              break;
             }
             cur_vlist_ptr = nxt_vlist_ptr;
             cur_vlist_node = nxt_vlist_node;

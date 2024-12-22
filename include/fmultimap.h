@@ -34,7 +34,7 @@ class Fmultimap {
 public:
 
   using VlistPtr = Fpointer<elementCount>; // ptr of VlistNode
-  using MnodePtr = Fpointer<elementCount>; // ptr of MapNode
+  using MnodePtr = Fpointer<elementCount / degree * 2>; // ptr of MapNode
 
   Fmultimap() = default;
   ~Fmultimap(); // remember to close files.
@@ -91,7 +91,7 @@ private:
     VlistPtr next_ptr_{};
   };
 
-  Fstream<MapNode, MnodePtr, elementCount> map_fstream_;
+  Fstream<MapNode, MnodePtr, elementCount / degree * 2> map_fstream_;
   Fstream<VlistNode, size_t, elementCount> vlist_fstream_;
   MnodePtr root_ptr_{};
   bool is_open = false;

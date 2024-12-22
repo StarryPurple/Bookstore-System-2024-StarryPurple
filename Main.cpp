@@ -82,7 +82,7 @@ private:
 };
 
 using ValueType = int;
-Fmultimap<KeyType, ValueType, 48, 100010> multimap;
+Fmultimap<KeyType, ValueType, 48, 100010 / 48 + 20> multimap;
 
 void insert(const KeyType &key, const ValueType value) {
   multimap.insert(key, value);
