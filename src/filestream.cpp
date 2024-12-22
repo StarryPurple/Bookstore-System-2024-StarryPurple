@@ -108,7 +108,7 @@ Fpointer<elementCount>
 Fstream<StorageType, InfoType, elementCount>::allocate() {
   if(!file_.is_open())
     throw FileExceptions("Allocating storage while no file is open");
-  size_t loc = lru_loc_;
+  offsetType loc = lru_loc_;
   while(loc < elementCount && bitmap_[loc]) loc++;
   if(loc != elementCount)
     lru_loc_ = loc;
@@ -133,7 +133,7 @@ Fpointer<elementCount>
 Fstream<StorageType, InfoType, elementCount>::allocate(const StorageType &data) {
   if(!file_.is_open())
     throw FileExceptions("Allocating storage while no file is open");
-  size_t loc = lru_loc_;
+  offsetType loc = lru_loc_;
   while(loc < elementCount && bitmap_[loc]) loc++;
   if(loc != elementCount)
     lru_loc_ = loc;

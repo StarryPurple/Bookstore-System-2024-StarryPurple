@@ -38,7 +38,7 @@
 
 namespace StarryPurple {
 
-using offsetType = size_t;
+using offsetType = int;
 using filenameType = std::string;
 constexpr size_t cMaxFileSize = 1 << 22; // 32 MB
 constexpr size_t cElementCount = 1 << 14; // 16384, > 10000

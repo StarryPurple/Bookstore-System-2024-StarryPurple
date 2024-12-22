@@ -11,8 +11,8 @@
  */
 
 #pragma once
-#ifndef DATA_STRUCTURE_H
-#define DATA_STRUCTURE_H
+#ifndef B_LINK_TREE_H
+#define B_LINK_TREE_H
 
 #include "filestream.h"
 
@@ -34,8 +34,6 @@ class BLinkTree {
 
 public:
 
-  using KeyPtr = Fpointer<elementCount>; // ptr of KeyType node
-  // using ValuePtr = Fpointer<elementCount>; // ptr of ValurType node
   using VlistPtr = Fpointer<elementCount>; // ptr of VlistNode
   using MnodePtr = Fpointer<elementCount>; // ptr of MapNode
 
@@ -51,10 +49,8 @@ public:
   std::vector<std::pair<MnodePtr, size_t>> lower_bound_route(const KeyType &key);
 
 
-  // open the three BLinkTree files.
-  // naming rule: with parameter @filename, the names of files would be
-  //     filename_map_index.dat, filename_map_key.dat, filename_map_val.dat
-  void open(const filenameType &map_filename, const filenameType &key_filename, const filenameType &vlist_filename);
+  // open BLinkTree files.
+  void open(const filenameType &map_filename, const filenameType &vlist_filename);
   // close BLinkTree files
   void close();
 
@@ -76,10 +72,10 @@ private:
     MapNode() = default;
 
     bool is_leaf_ = false;
-    size_t node_size_ = 0;
+    int node_size_ = 0;
     KeyType high_key_{};
     MnodePtr parent_ptr_{}, link_ptr_{};
-    KeyPtr key_ptr_[degree + 1]{};
+    KeyType key_[degree + 1]{};
     MnodePtr mnode_ptr_[degree + 1]{}; // nullptr for is_leaf_ = true
     VlistPtr vlist_ptr_[degree + 1]{}; // the begin of the list. nullptr for is_leaf_ = false
     // todo: reduce space cost by using union or std::variant<MnodePtr, VlistPtr>
@@ -97,7 +93,6 @@ private:
   };
 
   Fstream<MapNode, MnodePtr, elementCount> map_fstream_;
-  Fstream<KeyType, size_t, elementCount> key_fstream_;
   Fstream<VlistNode, size_t, elementCount> vlist_fstream_;
   MnodePtr root_ptr_{};
   bool is_open = false;
@@ -105,4 +100,4 @@ private:
 
 } // namespace StarryPurple
 
-#endif // DATA_STRUCTURE_H
+#endif // B_LINK_TREE_H

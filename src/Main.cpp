@@ -36,7 +36,7 @@ struct KeyType {
       if(val[i] != other.val[i])
         return val[i] < other.val[i];
     }
-    throw runtime_error("Invalid comparision");
+    // return false;
   }
   bool operator>(const KeyType &other) const {
     for(int i = 0; i < 65; i++) {
@@ -45,7 +45,7 @@ struct KeyType {
       if(val[i] != other.val[i])
         return val[i] > other.val[i];
     }
-    throw runtime_error("Invalid comparision");
+    // return false;
   }
   bool operator<=(const KeyType &other) const {
     return !(*this > other);
@@ -60,7 +60,8 @@ struct KeyType {
       if(val[i] != other.val[i])
         return false;
     }
-    throw runtime_error("Invalid comparision");
+    // throw runtime_error("Invalid comparision");
+    // return true;
   }
   bool operator!=(const KeyType &other) const {
     return !(*this == other);
@@ -74,15 +75,13 @@ private:
 };
 
 using ValueType = int;
-BLinkTree<KeyType, ValueType, 1 << 4, 100> multimap;
+BLinkTree<KeyType, ValueType, 48, 100010> multimap;
 
-void insert(const string &key_str, const ValueType value) {
-  KeyType key = key_str;
+void insert(const KeyType &key, const ValueType value) {
   multimap.insert(key, value);
 }
 
-void find(const string &key_str) {
-  KeyType key = key_str;
+void find(const KeyType &key) {
   auto list = multimap.find(key);
   if(list.empty())
     cout << "null";
@@ -92,24 +91,34 @@ void find(const string &key_str) {
   cout << endl;
 }
 
-void erase(const string &key_str, const ValueType value) {
-  KeyType key = key_str;
+void erase(const KeyType &key, const ValueType value) {
   multimap.erase(key, value);
 }
 
 int main() {
-  string map_filename = "../data/test_map.bsdat";
-  string key_filename = "../data/test_key.bsdat";
-  string vlist_filename = "../data/test_vlist.bsdat";
-  multimap.open(map_filename, key_filename, vlist_filename);
-  insert("FlowersForAlgernon", 1966);
-  insert("CppPrimer", 2012);
-  insert("Dune", 2021);
-  insert("CppPrimer", 2001);
-  find("CppPrimer");
-  find("Java");
-  erase("Dune", 2021);
-  find("Dune");
+  string map_filename = "test_map.bsdat";
+  string vlist_filename = "test_vlist.bsdat";
+  multimap.open(map_filename, vlist_filename);
+  int n; cin >> n;
+  string oper, key_str;
+  KeyType key;
+  ValueType value;
+  while(n--) {
+    cin >> oper;
+    if(oper == "insert") {
+      cin >> key_str; key = key_str;
+      cin >> value;
+      insert(key, value);
+    } else if(oper == "find") {
+      cin >> key_str; key = key_str;
+      find(key);
+    } else if(oper == "delete") {
+      cin >> key_str; key = key_str;
+      cin >> value;
+      erase(key, value);
+    }
+  }
+  multimap.close();
   return 0;
 }
 /*

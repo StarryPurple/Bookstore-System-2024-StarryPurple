@@ -18,9 +18,8 @@ BLinkTree<KeyType, ValueType, degree, elementCount>::~BLinkTree() {
 
 template<class KeyType, class ValueType, size_t degree, size_t elementCount>
 void BLinkTree<KeyType, ValueType, degree, elementCount>::open(
-  const filenameType &map_filename, const filenameType &key_filename, const filenameType &vlist_filename) {
+  const filenameType &map_filename, const filenameType &vlist_filename) {
   map_fstream_.open(map_filename);
-  key_fstream_.open(key_filename);
   vlist_fstream_.open(vlist_filename);
   is_open = true;
 
@@ -32,7 +31,6 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::close() {
   map_fstream_.write_info(root_ptr_);
 
   map_fstream_.close();
-  key_fstream_.close();
   vlist_fstream_.close();
   is_open = false;
 }
@@ -68,7 +66,7 @@ BLinkTree<KeyType, ValueType, degree, elementCount>::lower_bound_route(const Key
     KeyType helper_key;
     while(l < r) {
       size_t mid = (l + r) >> 1;
-      key_fstream_.read(helper_key, mnode.key_ptr_[mid + 1]);
+      helper_key = mnode.key_[mid + 1];
       if(key < helper_key) r = mid;
       else l = mid + 1;
     }
@@ -110,7 +108,7 @@ BLinkTree<KeyType, ValueType, degree, elementCount>::upper_bound_route(const Key
     KeyType helper_key;
     while(l < r) {
       size_t mid = (l + r) >> 1;
-      key_fstream_.read(helper_key, mnode.key_ptr_[mid]);
+      helper_key = mnode.key_[mid];
       if(key > helper_key) l = mid + 1;
       else r = mid;
     }
@@ -130,7 +128,7 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::merge(const MnodePtr &
 
   const size_t offset = left_node.node_size_;
   for(size_t i = 0; i < right_node.node_size_; ++i)
-    left_node.key_ptr_[offset + i] = right_node.key_ptr_[i];
+    left_node.key_[offset + i] = right_node.key_[i];
   if(left_node.is_leaf_)
     for(size_t i = 0; i < right_node.node_size_; ++i)
       left_node.vlist_ptr_[offset + i] = right_node.vlist_ptr_[i];
@@ -143,12 +141,12 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::merge(const MnodePtr &
   left_node.link_ptr_ = right_node.link_ptr_;
 
   for(size_t i = left_pos + 1; i < parent_node.node_size_ - 1; ++i) {
-    parent_node.key_ptr_[i] = parent_node.key_ptr_[i + 1];
+    parent_node.key_[i] = parent_node.key_[i + 1];
     // always an inner node
     parent_node.mnode_ptr_[i] = parent_node.mnode_ptr_[i + 1];
   }
   --parent_node.node_size_;
-  parent_node.key_ptr_[parent_node.node_size_].setnull();
+  parent_node.key_[parent_node.node_size_] = KeyType();
 
   // parent_node modified. left_node modified. right_node discarded.
   map_fstream_.write(parent_node, parent_ptr);
@@ -164,8 +162,8 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::move_from_left(const M
   map_fstream_.read(left_node, left_ptr); map_fstream_.read(right_node, right_ptr);
 
   for(size_t i = right_node.node_size_; i > 0; --i)
-    right_node.key_ptr_[i] = right_node.key_ptr_[i - 1];
-  right_node.key_ptr_[0] = left_node.key_ptr_[left_node.node_size_ - 1];
+    right_node.key_[i] = right_node.key_[i - 1];
+  right_node.key_[0] = left_node.key_[left_node.node_size_ - 1];
   if(left_node.is_leaf_) {
     for(size_t i = right_node.node_size_; i > 0; --i)
       right_node.vlist_ptr_[i] = right_node.vlist_ptr_[i - 1];
@@ -179,12 +177,12 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::move_from_left(const M
   ++right_node.node_size_;
   --left_node.node_size_;
 
-  left_node.key_ptr_[left_node.node_size_].setnull();
+  left_node.key_[left_node.node_size_] = KeyType();
   left_node.vlist_ptr_[left_node.node_size_].setnull();
   left_node.mnode_ptr_[left_node.node_size_].setnull();
 
-  key_fstream_.read(left_node.high_key_, left_node.key_ptr_[left_node.node_size_ - 1]);
-  parent_node.key_ptr_[left_pos] = left_node.key_ptr_[left_node.node_size_ - 1];
+  left_node.high_key_ = left_node.key_[left_node.node_size_ - 1];
+  parent_node.key_[left_pos] = left_node.key_[left_node.node_size_ - 1];
 
   // parent_node modified. left_node modified. right_node modified.
   map_fstream_.write(parent_node, parent_ptr);
@@ -199,9 +197,9 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::move_from_right(const 
   MnodePtr left_ptr = parent_node.mnode_ptr_[left_pos], right_ptr = parent_node.mnode_ptr_[left_pos + 1];
   map_fstream_.read(left_node, left_ptr); map_fstream_.read(right_node, right_ptr);
 
-  left_node.key_ptr_[left_node.node_size_] = right_node.key_ptr_[0];
+  left_node.key_[left_node.node_size_] = right_node.key_[0];
   for(size_t i = 0; i < right_node.node_size_ - 1; ++i)
-    left_node.key_ptr_[left_node.node_size_] = right_node.key_ptr_[0];
+    left_node.key_[left_node.node_size_] = right_node.key_[0];
   if(left_node.is_leaf_) {
     left_node.vlist_ptr_[left_node.node_size_] = right_node.vlist_ptr_[0];
     for(size_t i = 0; i < right_node.node_size_ - 1; ++i)
@@ -214,12 +212,12 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::move_from_right(const 
   ++left_node.node_size_;
   --right_node.node_size_;
 
-  right_node.key_ptr_[right_node.node_size_].setnull();
+  right_node.key_[right_node.node_size_] = KeyType();
   right_node.vlist_ptr_[right_node.node_size_].setnull();
   right_node.mnode_ptr_[right_node.node_size_].setnull();
 
-  key_fstream_.read(left_node.high_key_, left_node.key_ptr_[left_node.node_size_ - 1]);
-  parent_node.key_ptr_[left_pos] = left_node.key_ptr_[left_node.node_size_ - 1];
+  left_node.high_key_ = left_node.key_[left_node.node_size_ - 1];
+  parent_node.key_[left_pos] = left_node.key_[left_node.node_size_ - 1];
 
   // parent_node modified. left_node modified. right_node modified.
   map_fstream_.write(parent_node, parent_ptr);
@@ -237,8 +235,8 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::split(const MnodePtr &
   const size_t left_size = left_node.node_size_ / 2, right_size = left_node.node_size_ - left_size;
 
   for(size_t i = 0; i < right_size; ++i) {
-    right_node.key_ptr_[i] = left_node.key_ptr_[left_size + i];
-    left_node.key_ptr_[left_size + i].setnull();
+    right_node.key_[i] = left_node.key_[left_size + i];
+    left_node.key_[left_size + i] = KeyType();
   }
   if(left_node.is_leaf_)
     for(size_t i = 0; i < right_size; ++i) {
@@ -259,19 +257,19 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::split(const MnodePtr &
   MnodePtr right_ptr = map_fstream_.allocate(right_node);
 
   left_node.node_size_ = left_size;
-  key_fstream_.read(left_node.high_key_, left_node.key_ptr_[left_node.node_size_ - 1]);
+  left_node.high_key_ = left_node.key_[left_node.node_size_ - 1];
   left_node.link_ptr_ = right_ptr;
 
   // left_node modified.
   map_fstream_.write(left_node, left_ptr);
 
   for(size_t i = parent_node.node_size_ - 1; i > pos; --i) {
-    parent_node.key_ptr_[i + 1] = parent_node.key_ptr_[i];
+    parent_node.key_[i + 1] = parent_node.key_[i];
     // always an inner node
     parent_node.mnode_ptr_[i + 1] = parent_node.mnode_ptr_[i];
   }
-  parent_node.key_ptr_[pos + 1] = parent_node.key_ptr_[pos];
-  parent_node.key_ptr_[pos] = left_node.key_ptr_[left_node.node_size_ - 1];
+  parent_node.key_[pos + 1] = parent_node.key_[pos];
+  parent_node.key_[pos] = left_node.key_[left_node.node_size_ - 1];
   parent_node.mnode_ptr_[pos + 1] = right_ptr;
   ++parent_node.node_size_;
 
@@ -291,7 +289,7 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::insert(const KeyType &
     root_node.high_key_ = key;
     root_node.parent_ptr_.setnull();
     root_node.link_ptr_.setnull();
-    root_node.key_ptr_[0] = key_fstream_.allocate(key);
+    root_node.key_[0] = key;
     root_node.vlist_ptr_[0] = vlist_fstream_.allocate(VlistNode(value, VlistPtr(nullptr)));
 
     root_ptr_ = map_fstream_.allocate(root_node);
@@ -305,21 +303,28 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::insert(const KeyType &
   MapNode cur_node; map_fstream_.read(cur_node, cur_ptr);
   if(pos == degree + 1) {
     // This key doesn't exist, and it's bigger than any existing key
-    cur_node.key_ptr_[cur_node.node_size_] = key_fstream_.allocate(key);
+    cur_node.key_[cur_node.node_size_] = key;
     cur_node.vlist_ptr_[cur_node.node_size_] = vlist_fstream_.allocate(VlistNode(value, VlistPtr(nullptr)));
     cur_node.high_key_ = key;
     ++cur_node.node_size_;
     map_fstream_.write(cur_node, cur_ptr);
+    for(auto [route_ptr, pos]: route) {
+      MapNode route_node;
+      map_fstream_.read(route_node, route_ptr);
+      route_node.key_[route_node.node_size_ - 1] = key; // pos == route_node.node_size_
+      route_node.high_key_ = key;
+      map_fstream_.write(route_node, route_ptr);
+    }
   } else {
     KeyType helper_key;
-    key_fstream_.read(helper_key, cur_node.key_ptr_[pos]);
+    helper_key = cur_node.key_[pos];
     if(key != helper_key) {
       // This key doesn't exist, but there is a key bigger than it.
       for(size_t i = cur_node.node_size_; i > pos; --i) {
-        cur_node.key_ptr_[i] = cur_node.key_ptr_[i - 1];
+        cur_node.key_[i] = cur_node.key_[i - 1];
         cur_node.vlist_ptr_[i] = cur_node.vlist_ptr_[i - 1];
       }
-      cur_node.key_ptr_[pos] = key_fstream_.allocate(key);
+      cur_node.key_[pos] = key;
       cur_node.vlist_ptr_[pos] = vlist_fstream_.allocate(VlistNode(value, VlistPtr(nullptr)));
       ++cur_node.node_size_;
       map_fstream_.write(cur_node, cur_ptr);
@@ -377,7 +382,7 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::insert(const KeyType &
       root_node.is_leaf_ = false; // never a leaf: the tree isn't empty
       root_node.node_size_ = 1;
       root_node.high_key_ = cur_node.high_key_;
-      root_node.key_ptr_[0] = cur_node.key_ptr_[cur_node.node_size_ - 1];
+      root_node.key_[0] = cur_node.key_[cur_node.node_size_ - 1];
       root_node.mnode_ptr_[0] = cur_root_ptr;
       root_ptr_ = map_fstream_.allocate(root_node);
       cur_node.parent_ptr_ = root_ptr_; map_fstream_.write(cur_node, cur_root_ptr);
@@ -400,7 +405,7 @@ std::vector<ValueType> BLinkTree<KeyType, ValueType, degree, elementCount>::find
   auto [leaf_ptr, pos] = route.back();
   if(pos == degree + 1) return res; // nothing found.
   MapNode map_node; map_fstream_.read(map_node, leaf_ptr);
-  KeyType key_found; key_fstream_.read(key_found, map_node.key_ptr_[pos]);
+  KeyType key_found; key_found = map_node.key_[pos]; // combine these lines.
   if(key != key_found) return res; // not found. maybe "key < key_found"?
   VlistPtr cur_vlist_ptr = map_node.vlist_ptr_[pos];
   VlistNode cur_vlist_node;
@@ -433,14 +438,16 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::erase(const KeyType &k
   if(nxt_vlist_ptr.isnull()) {
     if(value == cur_vlist_node.value_) {
       vlist_fstream_.free(cur_vlist_ptr);
+      // cur_node.key_[pos].setnull();
+      // map_fstream_.write(cur_node, cur_ptr);
       // todo: delete this key
       for(size_t i = pos; i < cur_node.node_size_ - 1; ++i) {
         // leaf_node
-        cur_node.key_ptr_[i] = cur_node.key_ptr_[i + 1];
+        cur_node.key_[i] = cur_node.key_[i + 1];
         cur_node.vlist_ptr_[i] = cur_node.vlist_ptr_[i + 1];
       }
       --cur_node.node_size_;
-      cur_node.key_ptr_[cur_node.node_size_].setnull();
+      cur_node.key_[cur_node.node_size_] = KeyType();
       cur_node.vlist_ptr_[cur_node.node_size_].setnull();
       if(cur_ptr == root_ptr_) {
         // only check if the tree is empty
@@ -452,7 +459,7 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::erase(const KeyType &k
       }
       // now cur_node.node_size >= degree / 2 - 1 >= 2. (with degree >= 6)
       if(pos == cur_node.node_size_)
-        key_fstream_.read(cur_node.high_key_, cur_node.key_ptr_[cur_node.node_size_ - 1]);
+        cur_node.high_key_ = cur_node.key_[cur_node.node_size_ - 1];
       map_fstream_.write(cur_node, cur_ptr);
       while(true) {
         // handle with MapNodes that is too small.
@@ -497,6 +504,8 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::erase(const KeyType &k
   }
   if(value == cur_vlist_node.value_) {
     cur_node.vlist_ptr_[pos] = nxt_vlist_ptr;
+    // cur_node modified.
+    map_fstream_.write(cur_node, cur_ptr);
     vlist_fstream_.free(cur_vlist_ptr);
     return;
   }
@@ -505,6 +514,8 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::erase(const KeyType &k
     vlist_fstream_.read(nxt_vlist_node, nxt_vlist_ptr);
     if(value == nxt_vlist_node.value_) {
       cur_vlist_node.next_ptr_ = nxt_vlist_node.next_ptr_;
+      // cur_vlist_node modified.
+      vlist_fstream_.write(cur_vlist_node, cur_vlist_ptr);
       vlist_fstream_.free(nxt_vlist_ptr);
       return;
     }
