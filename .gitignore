@@ -2,3 +2,4 @@
 /dev-test
 /cmake-build-debug
 /.idea
+/data/*.bsdat
