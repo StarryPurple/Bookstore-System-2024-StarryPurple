@@ -96,8 +96,8 @@ void erase(const KeyType &key, const ValueType value) {
 }
 
 int main() {
-  string map_filename = "test_map.bsdat";
-  string vlist_filename = "test_vlist.bsdat";
+  string map_filename = "../data/test_map.bsdat";
+  string vlist_filename = "../data/test_vlist.bsdat";
   multimap.open(map_filename, vlist_filename);
   int n; cin >> n;
   string oper, key_str;
