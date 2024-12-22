@@ -34,10 +34,10 @@ class BLinkTree {
 
 public:
 
-  using KeyPtr = typename Fstream<KeyType, size_t, elementCount>::fpointer; // ptr of KeyType node
-  // using ValuePtr = typename Fstream<ValueType, size_t, elementCount>::fpointer; // ptr of ValurType node
-  using VlistPtr = typename Fstream<VlistNode, size_t, elementCount>::fpointer; // ptr of VlistNode
-  using MnodePtr = typename Fstream<MapNode, size_t, elementCount>::fpointer; // ptr of MapNode
+  using KeyPtr = Fpointer<elementCount>; // ptr of KeyType node
+  // using ValuePtr = Fpointer<elementCount>; // ptr of ValurType node
+  using VlistPtr = Fpointer<elementCount>; // ptr of VlistNode
+  using MnodePtr = Fpointer<elementCount>; // ptr of MapNode
 
   BLinkTree() = default;
   ~BLinkTree(); // remember to close files.

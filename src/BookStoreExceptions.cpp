@@ -1,3 +1,8 @@
+/** BookstoreExceptions.cpp
+ * Author: StarryPurple
+ * Date: Since 2024.12.16
+ */
+
 #include "BookstoreExceptions.h"
 
 namespace StarryPurple {

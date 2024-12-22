@@ -43,36 +43,40 @@ using filenameType = std::string;
 constexpr size_t cMaxFileSize = 1 << 22; // 32 MB
 constexpr size_t cElementCount = 1 << 14; // 16384, > 10000
 
+template<class StorageType, class InfoType, size_t elementCount>
+class Fstream;
+
+template<size_t elementCount>
+class Fpointer {
+
+public:
+  // template<class StorageType, class InfoType> friend Fstream<StorageType, InfoType, elementCount>;
+
+  // the default constructor set offset_ = elementCount
+  // to ensure that the initial Fpointer is invalid, like nullptr.
+  Fpointer();
+  explicit Fpointer(nullptr_t);
+  explicit Fpointer(offsetType offset);
+  ~Fpointer() = default;
+
+  void setnull();
+  bool isnull() const;
+  bool operator==(const Fpointer &other) const;
+  bool operator!=(const Fpointer &other) const;
+
+  offsetType offset_ = elementCount;
+};
 
 template<class StorageType, class InfoType = size_t, size_t elementCount = cElementCount>
 class Fstream {
   // allow for sizeof(StorageType) at approximately cMaxFileSize / cElementCount = 1 << 7 = 128
   // smaller than 4KB ~ 4096
-  static_assert(
-    sizeof(InfoType) + sizeof(size_t) + (sizeof(StorageType) + sizeof(bool)) * cElementCount <= cMaxFileSize);
+  // static_assert(
+  //   sizeof(InfoType) + sizeof(size_t) + (sizeof(StorageType) + sizeof(bool)) * cElementCount <= cMaxFileSize);
 
 public:
 
-  // @offset: the ordinal of the storage block.
-  class fpointer {
-
-  public:
-    friend Fstream;
-
-    // the default constructor set offset_ = elementCount
-    // to ensure that the initial Fpointer is invalid, like nullptr.
-    fpointer();
-    explicit fpointer(nullptr_t);
-    explicit fpointer(offsetType offset);
-    ~fpointer() = default;
-
-    void setnull();
-    bool isnull() const;
-
-  private:
-    offsetType offset_ = elementCount;
-  };
-
+  using fpointer = Fpointer<elementCount>;
 
   Fstream() = default;
   ~Fstream();

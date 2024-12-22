@@ -1,31 +1,46 @@
+/** filestream.cpp
+ * Author: StarryPurple
+ * Date: Since 2024.12.16
+ */
+
 #include "filestream.h"
 
 using StarryPurple::FileExceptions;
 
 namespace StarryPurple {
 
-template<class StorageType, class InfoType, size_t elementCount>
-Fstream<StorageType, InfoType, elementCount>::fpointer::fpointer() {
+template<size_t elementCount>
+Fpointer<elementCount>::Fpointer(){
   setnull();
 }
 
-template<class StorageType, class InfoType, size_t elementCount>
-Fstream<StorageType, InfoType, elementCount>::fpointer::fpointer(nullptr_t) {
+template<size_t elementCount>
+Fpointer<elementCount>::Fpointer(nullptr_t) {
   setnull();
 }
 
 
-template<class StorageType, class InfoType, size_t elementCount>
-Fstream<StorageType, InfoType, elementCount>::fpointer::fpointer(offsetType offset): offset_(offset) {}
+template<size_t elementCount>
+Fpointer<elementCount>::Fpointer(offsetType offset): offset_(offset) {}
 
-template<class StorageType, class InfoType, size_t elementCount>
-void Fstream<StorageType, InfoType, elementCount>::fpointer::setnull() {
+template<size_t elementCount>
+void Fpointer<elementCount>::setnull() {
   offset_ = elementCount;
 }
 
-template<class StorageType, class InfoType, size_t elementCount>
-bool Fstream<StorageType, InfoType, elementCount>::fpointer::isnull() const {
+template<size_t elementCount>
+bool Fpointer<elementCount>::isnull() const {
   return offset_ == elementCount;
+}
+
+template<size_t elementCount>
+bool Fpointer<elementCount>::operator==(const Fpointer &other) const {
+  return offset_ == other.offset_;
+}
+
+template<size_t elementCount>
+bool Fpointer<elementCount>::operator!=(const Fpointer &other) const {
+  return !(*this == other);
 }
 
 
@@ -89,7 +104,7 @@ void Fstream<StorageType, InfoType, elementCount>::close() {
 }
 
 template<class StorageType, class InfoType, size_t elementCount>
-typename Fstream<StorageType, InfoType, elementCount>::fpointer
+Fpointer<elementCount>
 Fstream<StorageType, InfoType, elementCount>::allocate() {
   if(!file_.is_open())
     throw FileExceptions("Allocating storage while no file is open");
@@ -114,7 +129,7 @@ Fstream<StorageType, InfoType, elementCount>::allocate() {
 
 
 template<class StorageType, class InfoType, size_t elementCount>
-typename Fstream<StorageType, InfoType, elementCount>::fpointer
+Fpointer<elementCount>
 Fstream<StorageType, InfoType, elementCount>::allocate(const StorageType &data) {
   if(!file_.is_open())
     throw FileExceptions("Allocating storage while no file is open");

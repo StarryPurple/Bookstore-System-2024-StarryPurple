@@ -7,4 +7,5 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 
 file(GLOB_RECURSE src_list src/*.cpp)
 
-add_executable(code ${src_list})
+add_executable(code src/Main.cpp src/filestream.cpp src/blinktree.cpp src/BookStoreExceptions.cpp
+        src/filestream.cpp)

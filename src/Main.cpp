@@ -1,40 +1,106 @@
+#include "filestream.h"
+#include "filestream.cpp"
 #include "blinktree.h"
+#include "blinktree.cpp"
 #include <iostream>
 #include <cstring>
 using namespace std;
 using StarryPurple::BLinkTree;
 
+struct KeyType {
+  KeyType() {
+    for(int i = 0; i < 65; i++)
+      val[i] = '\0';
+  }
+  KeyType(const KeyType &other) {
+    for(int i = 0; i < 65; i++)
+      val[i] = other.val[i];
+  }
+  KeyType(const string &str) {
+    strcpy(val, str.c_str());
+  }
+  KeyType &operator=(const KeyType &other) {
+    if(this == &other) return *this;
+    for(int i = 0; i < 65; i++)
+      val[i] = other.val[i];
+    return *this;
+  }
+  KeyType &operator=(const string &str) {
+    strcpy(val, str.c_str());
+    return *this;
+  }
+  bool operator<(const KeyType &other) const {
+    for(int i = 0; i < 65; i++) {
+      if(val[i] == '\0' && other.val[i] == '\0')
+        return false;
+      if(val[i] != other.val[i])
+        return val[i] < other.val[i];
+    }
+    throw runtime_error("Invalid comparision");
+  }
+  bool operator>(const KeyType &other) const {
+    for(int i = 0; i < 65; i++) {
+      if(val[i] == '\0' && other.val[i] == '\0')
+        return false;
+      if(val[i] != other.val[i])
+        return val[i] > other.val[i];
+    }
+    throw runtime_error("Invalid comparision");
+  }
+  bool operator<=(const KeyType &other) const {
+    return !(*this > other);
+  }
+  bool operator>=(const KeyType &other) const {
+    return !(*this < other);
+  }
+  bool operator==(const KeyType &other) const {
+    for(int i = 0; i < 65; i++) {
+      if(val[i] == '\0' && other.val[i] == '\0')
+        return true;
+      if(val[i] != other.val[i])
+        return false;
+    }
+    throw runtime_error("Invalid comparision");
+  }
+  bool operator!=(const KeyType &other) const {
+    return !(*this == other);
+  }
+  friend ostream &operator<<(ostream &os, const KeyType &key) {
+    os << key.val;
+    return os;
+  }
+private:
+  char val[65];
+};
 
-using KeyType = char [64];
 using ValueType = int;
 BLinkTree<KeyType, ValueType, 1 << 4, 100> multimap;
 
 void insert(const string &key_str, const ValueType value) {
-  KeyType key;
-  strcpy(key, key_str.c_str());
+  KeyType key = key_str;
   multimap.insert(key, value);
 }
 
 void find(const string &key_str) {
-  KeyType key;
-  strcpy(key, key_str.c_str());
+  KeyType key = key_str;
   auto list = multimap.find(key);
-  for(auto value: list)
-    cout << value << " ";
+  if(list.empty())
+    cout << "null";
+  else
+    for(auto value: list)
+      cout << value << " ";
   cout << endl;
 }
 
 void erase(const string &key_str, const ValueType value) {
-  KeyType key;
-  strcpy(key, key_str.c_str());
+  KeyType key = key_str;
   multimap.erase(key, value);
 }
 
 int main() {
-  string map_filename = "./data/test_map.bsdat";
-  string key_filename = "./data/test_key.bsdat";
-  string vlist_filename = "./data/test_vlist.bsdat";
-  KeyType key; string key_str;
+  string map_filename = "../data/test_map.bsdat";
+  string key_filename = "../data/test_key.bsdat";
+  string vlist_filename = "../data/test_vlist.bsdat";
   multimap.open(map_filename, key_filename, vlist_filename);
   insert("FlowersForAlgernon", 1966);
   insert("CppPrimer", 2012);

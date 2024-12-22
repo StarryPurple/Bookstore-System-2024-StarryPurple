@@ -1,3 +1,7 @@
+/** blinktree.cpp
+ * Author: StarryPurple
+ * Date: Since 2024.12.17
+ */
 #include "blinktree.h"
 
 namespace StarryPurple {
@@ -88,11 +92,11 @@ BLinkTree<KeyType, ValueType, degree, elementCount>::upper_bound_route(const Key
     MnodePtr cur_ptr = root_ptr_;
     MapNode cur_node; map_fstream_.read(cur_node, cur_ptr);
     while(!cur_node.is_leaf_) {
-      route.emplace_back({cur_ptr, cur_node.node_size_ - 1});
+      route.push_back({cur_ptr, cur_node.node_size_ - 1});
       cur_ptr = cur_node.mnode_ptr_[cur_node.node_size_ - 1];
       map_fstream_.read(cur_node, cur_ptr);
     }
-    route.emplace_back({cur_ptr, degree + 1});
+    route.push_back({cur_ptr, degree + 1});
     return route;
   }
   while(true) {
@@ -110,8 +114,8 @@ BLinkTree<KeyType, ValueType, degree, elementCount>::upper_bound_route(const Key
       if(key > helper_key) l = mid + 1;
       else r = mid;
     }
-    route.emplace_back({mnode_ptr, l});
-    if(mnode.is_leaf) return route;
+    route.push_back({mnode_ptr, l});
+    if(mnode.is_leaf_) return route;
     mnode_ptr = mnode.mnode_ptr_[l];
     map_fstream_.read(mnode, mnode_ptr);
   }
@@ -126,10 +130,10 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::merge(const MnodePtr &
 
   const size_t offset = left_node.node_size_;
   for(size_t i = 0; i < right_node.node_size_; ++i)
-    left_node.key_ptr[offset + i] = right_node.key_ptr_[i];
+    left_node.key_ptr_[offset + i] = right_node.key_ptr_[i];
   if(left_node.is_leaf_)
     for(size_t i = 0; i < right_node.node_size_; ++i)
-      left_node.vlist_ptr_[offset + i] = right_node.vlist_ptr[i];
+      left_node.vlist_ptr_[offset + i] = right_node.vlist_ptr_[i];
   else
     for(size_t i = 0; i < right_node.node_size_; ++i)
       left_node.mnode_ptr_[offset + i] = right_node.mnode_ptr_[i];
@@ -149,7 +153,7 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::merge(const MnodePtr &
   // parent_node modified. left_node modified. right_node discarded.
   map_fstream_.write(parent_node, parent_ptr);
   map_fstream_.write(left_node, left_ptr);
-  map_fstream_.free(right_node, right_ptr);
+  map_fstream_.free(right_ptr);
 }
 
 template<class KeyType, class ValueType, size_t degree, size_t elementCount>
@@ -288,7 +292,7 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::insert(const KeyType &
     root_node.parent_ptr_.setnull();
     root_node.link_ptr_.setnull();
     root_node.key_ptr_[0] = key_fstream_.allocate(key);
-    root_node.vlist_ptr_[0] = vlist_fstream_.allocate(VlistNode(value, nullptr));
+    root_node.vlist_ptr_[0] = vlist_fstream_.allocate(VlistNode(value, VlistPtr(nullptr)));
 
     root_ptr_ = map_fstream_.allocate(root_node);
     return;
@@ -302,7 +306,7 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::insert(const KeyType &
   if(pos == degree + 1) {
     // This key doesn't exist, and it's bigger than any existing key
     cur_node.key_ptr_[cur_node.node_size_] = key_fstream_.allocate(key);
-    cur_node.vlist_ptr_[cur_node.node_size_] = vlist_fstream_.allocate(VlistNode(value, nullptr));
+    cur_node.vlist_ptr_[cur_node.node_size_] = vlist_fstream_.allocate(VlistNode(value, VlistPtr(nullptr)));
     cur_node.high_key_ = key;
     ++cur_node.node_size_;
     map_fstream_.write(cur_node, cur_ptr);
@@ -311,12 +315,12 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::insert(const KeyType &
     key_fstream_.read(helper_key, cur_node.key_ptr_[pos]);
     if(key != helper_key) {
       // This key doesn't exist, but there is a key bigger than it.
-      for(size_t i = cur_node.node_size_; i > pos; ++i) {
+      for(size_t i = cur_node.node_size_; i > pos; --i) {
         cur_node.key_ptr_[i] = cur_node.key_ptr_[i - 1];
         cur_node.vlist_ptr_[i] = cur_node.vlist_ptr_[i - 1];
       }
       cur_node.key_ptr_[pos] = key_fstream_.allocate(key);
-      cur_node.vlist_ptr_[pos] = vlist_fstream_.allocate(VlistNode(value, nullptr));
+      cur_node.vlist_ptr_[pos] = vlist_fstream_.allocate(VlistNode(value, VlistPtr(nullptr)));
       ++cur_node.node_size_;
       map_fstream_.write(cur_node, cur_ptr);
     } else {
@@ -325,7 +329,7 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::insert(const KeyType &
       if(cur_vlist_ptr.isnull()) {
         // should not happen.
         throw BLinkTreeExceptions("Empty key still exists");
-        cur_node.vlist_ptr_[pos] = vlist_fstream_.allocate(VlistNode(value, nullptr));
+        cur_node.vlist_ptr_[pos] = vlist_fstream_.allocate(VlistNode(value, VlistPtr(nullptr)));
         map_fstream_.write(cur_node, cur_ptr);
       } else {
         VlistNode cur_vlist_node; vlist_fstream_.read(cur_vlist_node, cur_vlist_ptr);
@@ -340,7 +344,7 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::insert(const KeyType &
           VlistNode nxt_vlist_node;
           while(true) {
             if(nxt_vlist_ptr.isnull()) {
-              cur_vlist_node.next_ptr_ = vlist_fstream_.allocate(VlistNode(value, nullptr));
+              cur_vlist_node.next_ptr_ = vlist_fstream_.allocate(VlistNode(value, VlistPtr(nullptr)));
               vlist_fstream_.write(cur_vlist_node, cur_vlist_ptr);
               break;
             }
@@ -381,7 +385,7 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::insert(const KeyType &
       return;
     }
     auto [parent_ptr, pos] = route.back();
-    route.pop();
+    route.pop_back();
     split(parent_ptr, pos);
     map_fstream_.read(cur_node, parent_ptr);
   }
@@ -433,7 +437,7 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::erase(const KeyType &k
       for(size_t i = pos; i < cur_node.node_size_ - 1; ++i) {
         // leaf_node
         cur_node.key_ptr_[i] = cur_node.key_ptr_[i + 1];
-        cur_node.vlist_ptr_[i] = cur_vlist_node[i + 1];
+        cur_node.vlist_ptr_[i] = cur_node.vlist_ptr_[i + 1];
       }
       --cur_node.node_size_;
       cur_node.key_ptr_[cur_node.node_size_].setnull();
@@ -459,10 +463,10 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::erase(const KeyType &k
         }
         auto [parent_ptr, pos] = route.back();
         route.pop_back();
-        MapNode parent_node; vlist_fstream_.read(parent_node, parent_ptr);
+        MapNode parent_node; map_fstream_.read(parent_node, parent_ptr);
         if(pos > 0) {
           // use left.
-          MapNode left_node; vlist_fstream_.read(left_node, parent_node.mnode_ptr_[pos - 1]);
+          MapNode left_node; map_fstream_.read(left_node, parent_node.mnode_ptr_[pos - 1]);
           if(left_node.node_size_ >= degree / 2) {
             move_from_left(parent_ptr, pos);
             return;
@@ -475,7 +479,7 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::erase(const KeyType &k
         }
         if(pos < cur_node.node_size_ - 1) {
           // try right.
-          MapNode right_node; vlist_fstream_.read(right_node, parent_node.mnode_ptr_[pos + 1]);
+          MapNode right_node; map_fstream_.read(right_node, parent_node.mnode_ptr_[pos + 1]);
           if(right_node.node_size_ >= degree / 2) {
             move_from_right(parent_ptr, pos);
             return;
@@ -512,10 +516,4 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::erase(const KeyType &k
 }
 
 
-
-
-
-
-
-
-}
+} // namespace StarryPurple
