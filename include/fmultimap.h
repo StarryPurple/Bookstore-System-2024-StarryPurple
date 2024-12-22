@@ -1,18 +1,17 @@
-/** blinktree.h
+/** fmultimap.h
  * Author: StarryPurple
  * Date: Since 2024.12.17
  *
  * Includes some useful data structures;
  *
- * BLink Tree:
+ * fmultimap / BLink Tree:
  *   A concurrency-friendly data structure widely used in file io.
- *   supports basic functions of a key-value map, similar to std::multimap.
- *
+ *   supports basic functions of a key-value map similar to std::multimap, but with file storage.
  */
 
 #pragma once
-#ifndef B_LINK_TREE_H
-#define B_LINK_TREE_H
+#ifndef F_MULTIMAP_H
+#define F_MULTIMAP_H
 
 #include "filestream.h"
 
@@ -25,7 +24,7 @@ namespace StarryPurple {
 // node_size should be in [degree / 2 - 1, degree - 1]
 // no ValueType is directly used. we only reads and passes fpointer of ValueType.
 template<class KeyType, class ValueType, size_t degree = 1 << 7, size_t elementCount = cElementCount>
-class BLinkTree {
+class Fmultimap {
 
   static_assert(degree >= 6); // used in erase(...)
 
@@ -37,8 +36,8 @@ public:
   using VlistPtr = Fpointer<elementCount>; // ptr of VlistNode
   using MnodePtr = Fpointer<elementCount>; // ptr of MapNode
 
-  BLinkTree() = default;
-  ~BLinkTree(); // remember to close files.
+  Fmultimap() = default;
+  ~Fmultimap(); // remember to close files.
   // the route to upper_bound result.
   // if tree is empty, returns an empty vector.
   // if finding fails (key too big), the result end with {leaf_ptr, degree + 1}
@@ -100,4 +99,4 @@ private:
 
 } // namespace StarryPurple
 
-#endif // B_LINK_TREE_H
+#endif // F_MULTIMAP_H

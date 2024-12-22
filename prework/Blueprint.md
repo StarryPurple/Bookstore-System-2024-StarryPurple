@@ -21,7 +21,7 @@ public:
 }
 ```
 
-权限类：
+用户权限类：
 
 ```cpp
 class UsrPrivilege{
@@ -31,9 +31,10 @@ public:
     UsrPrivilege(int pri);
     UsrPrivilege(const UsrPrivilege &other);
     operator|(const UsrPrivilege &other);
-    bool has_privilege(int pri) {return privilege | pri;}
-    bool has_privilege(const UsrPrivilege &other){
-        return privilege | other.privilege;
+    bool operator<=(const UsrPrivilege &other){
+        return (privilege | 1) <= (other.privilege | 1)
+            && (privilege | 2) <= (other.privilege | 2)
+            && (privilege | 4) <= (other.privilege | 4);
     }
 } clientPri(1), staffPri(3), rootPri(7);
 ```
@@ -51,7 +52,8 @@ using pwdType = cstr<31>;
 图书信息：
 
 ```cpp
-class BookInfo{
+class bookType{
+    friend Manager;
 private:
     ISBNType ISBN;
     bookInfoType bookname, author, keyword;
@@ -59,56 +61,84 @@ private:
     double price;
 }
 class BookDataBase{
+    friend Manager;
 private:
-    BookInfo books[cMaxStorage];
+    Fpointer<bookType> books[cMaxStorage];
 }
 ```
 
 用户信息：
 
 ```cpp
-class UsrInfo{
+class usrType{
+    friend Manager;
 private:
     usrInfoType usrID, usrname, pwd;
     const UsrPrivilege privilege;
-    Fpointer<BookInfo> selected_book;
-public:
-    // some functions. For example:
-    void Login(UsrPrivilege last_prim usrInfoType &password){
-        Validate(pwd, password); // implemented later
-        Validate(last_pri, privilege);
-        usr_stack.`
-    }
+    Fpointer<bookType> selected_book;
 }
 class UsrDataBase{
+    friend Manager;
 private:
-    UsrInfo usrs[cMaxStorage];
+    usrType usrs[cMaxStorage];
 }
+// may be either stored in file or memory
 class UsrStack{
+    friend Manager;
 private:
     int stack_size;
-    UsrInfo usr_stack[cMaxStorage];
+    Fpointer<usrType> usr_stack[cMaxStorage];
 public:
     bool empty();
     void push();
-    void pop();
+    void pop(); // remember to change some status of the active user
 } usr_stack;
 ```
 
-系统相关：
+控制系统（全程存储在内存）：
+
+```cpp
+class Manager{
+private:
+    usrType active_usr; // modified dynamically with usr_stack
+public:
+    // exposed functions. For example:
+    void login(usrType &usr, usrInfoType &pwd){
+        Validate<usrInfoType>(pwd).is(usr.pwd); // implemented later
+        Validate<UsrPrivilege>(active_usr.privilege).lesserThan(usr.privilege);
+        usr_stack.push(*this);
+    }
+    void logout(){
+        usr_stack.pop();
+    }
+    void register(usrType &new_usr);
+    void change_pwd(const usrInfoType &old_pwd, const usrInfoType &new_pwd);
+    void usr_add(const usrType &new_usr);
+    void delete_usr(const usrInfoType &usrID);
+
+    void show_book(const ISBNType &ISBN);
+    void show_book(const bookInfoType &info, char kwd_type);
+    void buy_book(const ISBNType &ISBN, int quantity);
+    void select_book(const ISBNType &ISBN);
+    void modify_book(const ISBNType &ISBN);
+    void modify_book(const bookInfoType &info, char kwd_type);
+    void import_book(const ISBNType &ISBN, int quantity);
+    
+    void show_finance(int count);
+    void report_finance();
+    void report_employee();
+    void log();
+}
+```
+
+相关指令：
 
     启动系统：程序开始时立即启动。若检测到用户序列为空则创建root用户。
 
     关闭系统：quit/exit指令后立即关闭。弹出左右登录用户。
 
-用户相关：
-
     账户登录：su指令后立即作用。若密码验证通过，在UsrStack中插入用户。
 
     账户登出：logout指令后作用。弹出UsrStack中的用户。
 
-    用户操作：使用UsrInfo中的接口完成。有权限确认。
-
-
-
-
+    用户操作：使用Manager中的接口完成。接口内部有权限确认。

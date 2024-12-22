@@ -1,34 +1,39 @@
 #include "filestream.h"
 #include "filestream.cpp"
-#include "blinktree.h"
-#include "blinktree.cpp"
+#include "fmultimap.h"
+#include "fmultimap.cpp"
 #include <iostream>
 #include <cstring>
 using namespace std;
-using StarryPurple::BLinkTree;
+using StarryPurple::Fmultimap;
 
 struct KeyType {
   KeyType() {
     for(int i = 0; i < 65; i++)
       val[i] = '\0';
   }
+
   KeyType(const KeyType &other) {
     for(int i = 0; i < 65; i++)
       val[i] = other.val[i];
   }
+
   KeyType(const string &str) {
     strcpy(val, str.c_str());
   }
+
   KeyType &operator=(const KeyType &other) {
     if(this == &other) return *this;
     for(int i = 0; i < 65; i++)
       val[i] = other.val[i];
     return *this;
   }
+
   KeyType &operator=(const string &str) {
     strcpy(val, str.c_str());
     return *this;
   }
+
   bool operator<(const KeyType &other) const {
     for(int i = 0; i < 65; i++) {
       if(val[i] == '\0' && other.val[i] == '\0')
@@ -36,8 +41,9 @@ struct KeyType {
       if(val[i] != other.val[i])
         return val[i] < other.val[i];
     }
-    // return false;
+    return false;
   }
+
   bool operator>(const KeyType &other) const {
     for(int i = 0; i < 65; i++) {
       if(val[i] == '\0' && other.val[i] == '\0')
@@ -45,8 +51,9 @@ struct KeyType {
       if(val[i] != other.val[i])
         return val[i] > other.val[i];
     }
-    // return false;
+    return false;
   }
+
   bool operator<=(const KeyType &other) const {
     return !(*this > other);
   }
@@ -61,7 +68,7 @@ struct KeyType {
         return false;
     }
     // throw runtime_error("Invalid comparision");
-    // return true;
+    return true;
   }
   bool operator!=(const KeyType &other) const {
     return !(*this == other);
@@ -75,7 +82,7 @@ private:
 };
 
 using ValueType = int;
-BLinkTree<KeyType, ValueType, 48, 100010> multimap;
+Fmultimap<KeyType, ValueType, 48, 100010> multimap;
 
 void insert(const KeyType &key, const ValueType value) {
   multimap.insert(key, value);

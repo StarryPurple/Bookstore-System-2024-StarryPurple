@@ -1,23 +1,23 @@
-/** blinktree.cpp
+/** fmultimap.cpp
  * Author: StarryPurple
  * Date: Since 2024.12.17
  */
-#include "blinktree.h"
+#include "fmultimap.h"
 
 namespace StarryPurple {
 
 template<class KeyType, class ValueType, size_t degree, size_t elementCount>
-BLinkTree<KeyType, ValueType, degree, elementCount>::VlistNode::VlistNode(
+Fmultimap<KeyType, ValueType, degree, elementCount>::VlistNode::VlistNode(
   const ValueType &value, const VlistPtr &next_ptr)
   :value_(value), next_ptr_(next_ptr) {}
 
 template<class KeyType, class ValueType, size_t degree, size_t elementCount>
-BLinkTree<KeyType, ValueType, degree, elementCount>::~BLinkTree() {
+Fmultimap<KeyType, ValueType, degree, elementCount>::~Fmultimap() {
   if(is_open) close();
 }
 
 template<class KeyType, class ValueType, size_t degree, size_t elementCount>
-void BLinkTree<KeyType, ValueType, degree, elementCount>::open(
+void Fmultimap<KeyType, ValueType, degree, elementCount>::open(
   const filenameType &map_filename, const filenameType &vlist_filename) {
   map_fstream_.open(map_filename);
   vlist_fstream_.open(vlist_filename);
@@ -27,7 +27,7 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::open(
 }
 
 template<class KeyType, class ValueType, size_t degree, size_t elementCount>
-void BLinkTree<KeyType, ValueType, degree, elementCount>::close() {
+void Fmultimap<KeyType, ValueType, degree, elementCount>::close() {
   map_fstream_.write_info(root_ptr_);
 
   map_fstream_.close();
@@ -36,8 +36,8 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::close() {
 }
 
 template<class KeyType, class ValueType, size_t degree, size_t elementCount>
-std::vector<std::pair<typename BLinkTree<KeyType, ValueType, degree, elementCount>::MnodePtr, size_t>>
-BLinkTree<KeyType, ValueType, degree, elementCount>::lower_bound_route(const KeyType &key) {
+std::vector<std::pair<typename Fmultimap<KeyType, ValueType, degree, elementCount>::MnodePtr, size_t>>
+Fmultimap<KeyType, ValueType, degree, elementCount>::lower_bound_route(const KeyType &key) {
   std::vector<std::pair<MnodePtr, size_t>> route;
   if(root_ptr_.isnull()) {
     return route;
@@ -78,8 +78,8 @@ BLinkTree<KeyType, ValueType, degree, elementCount>::lower_bound_route(const Key
 }
 
 template<class KeyType, class ValueType, size_t degree, size_t elementCount>
-std::vector<std::pair<typename BLinkTree<KeyType, ValueType, degree, elementCount>::MnodePtr, size_t>>
-BLinkTree<KeyType, ValueType, degree, elementCount>::upper_bound_route(const KeyType &key) {
+std::vector<std::pair<typename Fmultimap<KeyType, ValueType, degree, elementCount>::MnodePtr, size_t>>
+Fmultimap<KeyType, ValueType, degree, elementCount>::upper_bound_route(const KeyType &key) {
   std::vector<std::pair<MnodePtr, size_t>> route;
   if(root_ptr_.isnull()) {
     return route;
@@ -120,7 +120,7 @@ BLinkTree<KeyType, ValueType, degree, elementCount>::upper_bound_route(const Key
 }
 
 template<class KeyType, class ValueType, size_t degree, size_t elementCount>
-void BLinkTree<KeyType, ValueType, degree, elementCount>::merge(const MnodePtr &parent_ptr, size_t left_pos) {
+void Fmultimap<KeyType, ValueType, degree, elementCount>::merge(const MnodePtr &parent_ptr, size_t left_pos) {
   MapNode parent_node, left_node, right_node; map_fstream_.read(parent_node, parent_ptr);
   // assert(parent_node.node_size_ > left_pos + 1);
   MnodePtr left_ptr = parent_node.mnode_ptr_[left_pos], right_ptr = parent_node.mnode_ptr_[left_pos + 1];
@@ -155,7 +155,7 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::merge(const MnodePtr &
 }
 
 template<class KeyType, class ValueType, size_t degree, size_t elementCount>
-void BLinkTree<KeyType, ValueType, degree, elementCount>::move_from_left(const MnodePtr &parent_ptr, size_t left_pos) {
+void Fmultimap<KeyType, ValueType, degree, elementCount>::move_from_left(const MnodePtr &parent_ptr, size_t left_pos) {
   MapNode parent_node, left_node, right_node; map_fstream_.read(parent_node, parent_ptr);
   // assert(parent_node.node_size_ > left_pos + 1);
   MnodePtr left_ptr = parent_node.mnode_ptr_[left_pos], right_ptr = parent_node.mnode_ptr_[left_pos + 1];
@@ -191,7 +191,7 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::move_from_left(const M
 }
 
 template<class KeyType, class ValueType, size_t degree, size_t elementCount>
-void BLinkTree<KeyType, ValueType, degree, elementCount>::move_from_right(const MnodePtr &parent_ptr, size_t left_pos) {
+void Fmultimap<KeyType, ValueType, degree, elementCount>::move_from_right(const MnodePtr &parent_ptr, size_t left_pos) {
   MapNode parent_node, left_node, right_node; map_fstream_.read(parent_node, parent_ptr);
   // assert(parent_node.node_size_ > left_pos + 1);
   MnodePtr left_ptr = parent_node.mnode_ptr_[left_pos], right_ptr = parent_node.mnode_ptr_[left_pos + 1];
@@ -226,7 +226,7 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::move_from_right(const 
 }
 
 template<class KeyType, class ValueType, size_t degree, size_t elementCount>
-void BLinkTree<KeyType, ValueType, degree, elementCount>::split(const MnodePtr &parent_ptr, size_t pos) {
+void Fmultimap<KeyType, ValueType, degree, elementCount>::split(const MnodePtr &parent_ptr, size_t pos) {
   MapNode parent_node, left_node, right_node; map_fstream_.read(parent_node, parent_ptr);
   MnodePtr left_ptr = parent_node.mnode_ptr_[pos];
   map_fstream_.read(left_node, left_ptr);
@@ -278,7 +278,7 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::split(const MnodePtr &
 }
 
 template<class KeyType, class ValueType, size_t degree, size_t elementCount>
-void BLinkTree<KeyType, ValueType, degree, elementCount>::insert(const KeyType &key, const ValueType &value) {
+void Fmultimap<KeyType, ValueType, degree, elementCount>::insert(const KeyType &key, const ValueType &value) {
   if(root_ptr_.isnull()) {
     // empty tree.
     // just create a root node.
@@ -333,13 +333,15 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::insert(const KeyType &
       VlistPtr cur_vlist_ptr = cur_node.vlist_ptr_[pos];
       if(cur_vlist_ptr.isnull()) {
         // should not happen.
-        throw BLinkTreeExceptions("Empty key still exists");
+        // throw BLinkTreeExceptions("Empty key still exists");
         cur_node.vlist_ptr_[pos] = vlist_fstream_.allocate(VlistNode(value, VlistPtr(nullptr)));
         map_fstream_.write(cur_node, cur_ptr);
       } else {
         VlistNode cur_vlist_node; vlist_fstream_.read(cur_vlist_node, cur_vlist_ptr);
-        if(value == cur_vlist_node.value_)
-          throw BLinkTreeExceptions("Inserting duplicated key-value pair");
+        if(value == cur_vlist_node.value_){
+          // throw BLinkTreeExceptions("Inserting duplicated key-value pair");
+          return;
+        }
         if(value < cur_vlist_node.value_) {
           VlistPtr new_vlist_ptr = vlist_fstream_.allocate(VlistNode(value, cur_vlist_ptr));
           cur_node.vlist_ptr_[pos] = new_vlist_ptr;
@@ -354,8 +356,10 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::insert(const KeyType &
               break;
             }
             vlist_fstream_.read(nxt_vlist_node, nxt_vlist_ptr);
-            if(value == nxt_vlist_node.value_)
-              throw BLinkTreeExceptions("Inserting duplicated key-value pair");
+            if(value == nxt_vlist_node.value_) {
+              // throw BLinkTreeExceptions("Inserting duplicated key-value pair");
+              return;
+            }
             if(value < nxt_vlist_node.value_) {
               cur_vlist_node.next_ptr_ = vlist_fstream_.allocate(VlistNode(value, nxt_vlist_ptr));
               vlist_fstream_.write(cur_vlist_node, cur_vlist_ptr);
@@ -398,7 +402,7 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::insert(const KeyType &
 
 
 template<class KeyType, class ValueType, size_t degree, size_t elementCount>
-std::vector<ValueType> BLinkTree<KeyType, ValueType, degree, elementCount>::find(const KeyType &key) {
+std::vector<ValueType> Fmultimap<KeyType, ValueType, degree, elementCount>::find(const KeyType &key) {
   std::vector<ValueType> res;
   std::vector<std::pair<MnodePtr, size_t>> route = upper_bound_route(key);
   if(route.empty()) return res; // nothing found.
@@ -418,7 +422,7 @@ std::vector<ValueType> BLinkTree<KeyType, ValueType, degree, elementCount>::find
 }
 
 template<class KeyType, class ValueType, size_t degree, size_t elementCount>
-void BLinkTree<KeyType, ValueType, degree, elementCount>::erase(const KeyType &key, const ValueType &value) {
+void Fmultimap<KeyType, ValueType, degree, elementCount>::erase(const KeyType &key, const ValueType &value) {
   if(root_ptr_.isnull()) return; // nothing to delete.
   std::vector<std::pair<MnodePtr, size_t>> route = upper_bound_route(key);
   // route can't be empty, for tree is not empty
@@ -430,7 +434,7 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::erase(const KeyType &k
   VlistPtr cur_vlist_ptr = cur_node.vlist_ptr_[pos];
   if(cur_vlist_ptr.isnull()) {
     // shouldn't have been here.
-    throw BLinkTreeExceptions("Empty key still exists.");
+    // throw BLinkTreeExceptions("Empty key still exists.");
     return; // nothing to delete
   }
   VlistNode cur_vlist_node; vlist_fstream_.read(cur_vlist_node, cur_vlist_ptr);
@@ -440,7 +444,7 @@ void BLinkTree<KeyType, ValueType, degree, elementCount>::erase(const KeyType &k
       vlist_fstream_.free(cur_vlist_ptr);
       // cur_node.key_[pos].setnull();
       // map_fstream_.write(cur_node, cur_ptr);
-      // todo: delete this key
+      // delete this key.
       for(size_t i = pos; i < cur_node.node_size_ - 1; ++i) {
         // leaf_node
         cur_node.key_[i] = cur_node.key_[i + 1];
