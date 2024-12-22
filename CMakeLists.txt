@@ -8,7 +8,7 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 file(GLOB_RECURSE src_list src/*.cpp)
 
 add_executable(code
-        src/Main.cpp
+        Main.cpp
         src/BookStoreExceptions.cpp
         src/filestream.cpp
         src/fmultimap.cpp)
