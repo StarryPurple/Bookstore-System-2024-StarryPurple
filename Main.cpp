@@ -1,11 +1,11 @@
 #include "filestream.h"
 #include "filestream.cpp"
-#include "fmultimap.h"
-#include "fmultimap.cpp"
+#include "blocklist.h"
+#include "blocklist.cpp"
 #include <iostream>
 #include <cstring>
 using namespace std;
-using StarryPurple::Fmultimap;
+using StarryPurple::BlockList;
 
 struct KeyType {
   KeyType() {
@@ -82,14 +82,15 @@ private:
 };
 
 using ValueType = int;
-Fmultimap<KeyType, ValueType, 48, 100010 / 48 + 20> multimap;
+// sqrt(1e5) ~ 316.2
+BlockList<KeyType, ValueType, 325> multimap;
 
 void insert(const KeyType &key, const ValueType value) {
   multimap.insert(key, value);
 }
 
 void find(const KeyType &key) {
-  auto list = multimap.find(key);
+  auto list = multimap[key];
   if(list.empty())
     cout << "null";
   else
@@ -103,9 +104,8 @@ void erase(const KeyType &key, const ValueType value) {
 }
 
 int main() {
-  string map_filename = "test_map.bsdat";
-  string vlist_filename = "test_vlist.bsdat";
-  multimap.open(map_filename, vlist_filename);
+  string filename_suffix = "test";
+  multimap.open(filename_suffix);
   int n; cin >> n;
   string oper, key_str;
   KeyType key;
