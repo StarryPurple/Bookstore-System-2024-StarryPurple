@@ -2,16 +2,17 @@
 #include "filestream.cpp"
 #include "blocklist.h"
 #include "blocklist.cpp"
+#include "lrucache.h"
+#include "lrucache.cpp"
+#include "fmultimap.h"
+#include "fmultimap.cpp"
 #include <iostream>
 #include <cstring>
 using namespace std;
-using StarryPurple::BlockList;
+using StarryPurple::Fmultimap;
 
 struct KeyType {
-  KeyType() {
-    for(int i = 0; i < 65; i++)
-      val[i] = '\0';
-  }
+  KeyType() = default;
 
   KeyType(const KeyType &other) {
     for(int i = 0; i < 65; i++)
@@ -77,13 +78,23 @@ struct KeyType {
     os << key.val;
     return os;
   }
+  std::string expose_str() const {
+    return {val};
+  }
 private:
   char val[65];
 };
 
+template<>
+struct std::hash<KeyType> {
+  std::size_t operator()(const KeyType &key) const noexcept {
+    return std::hash<std::string>()(key.expose_str());
+  }
+};
+
 using ValueType = int;
 // sqrt(1e5) ~ 316.2
-BlockList<KeyType, ValueType, 325> multimap;
+Fmultimap<KeyType, ValueType, 40, 100000> multimap;
 
 void insert(const KeyType &key, const ValueType value) {
   multimap.insert(key, value);
@@ -108,7 +119,7 @@ int main() {
   multimap.open(filename_suffix);
   int n; cin >> n;
   string oper, key_str;
-  KeyType key;
+  KeyType key{};
   ValueType value;
   while(n--) {
     cin >> oper;

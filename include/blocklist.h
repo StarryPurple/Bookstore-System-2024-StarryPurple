@@ -3,6 +3,7 @@
 #define BLOCK_LIST_H
 
 #include "filestream.h"
+#include "lrucache.h"
 #include <vector>
 
 namespace StarryPurple {
@@ -15,6 +16,7 @@ class BlockList {
   using HeadPtr = Fpointer<degree>;
   using BodyPtr = Fpointer<degree * degree>;
   using VListPtr = Fpointer<degree * degree + 1>; // + 1 to distinguish from each other.
+  LRUCache<KeyType, BodyPtr, 20> body_cache_;
 private:
   struct HeadNode {
     KeyType high_key_{};

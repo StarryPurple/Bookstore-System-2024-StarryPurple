@@ -50,9 +50,48 @@ void BlockList<KeyType, ValueType, degree>::insert(const KeyType &key, const Val
     VListPtr new_vlist_ptr = vlistnode_fstream_.allocate({value, VListPtr()});
     VListPtr new_vlist_begin = vlistnode_fstream_.allocate({ValueType(), new_vlist_ptr});
     BodyPtr new_body_ptr = bodynode_fstream_.allocate({key, BodyPtr(), new_vlist_begin});
+    body_cache_.insert(key, new_body_ptr);
     BodyPtr new_body_begin = bodynode_fstream_.allocate({KeyType(), new_body_ptr, VListPtr()});
     HeadPtr new_head_ptr = headnode_fstream_.allocate({key, HeadPtr(), new_body_begin, 1});
     begin_head_ptr_ = headnode_fstream_.allocate({KeyType(), new_head_ptr, BodyPtr(), 0});
+    return;
+  }
+  if(auto [body_ptr, is_succeed] = body_cache_.find(key); is_succeed) {
+    // found key in body_ptr.
+    BodyNode body_node;
+    bodynode_fstream_.read(body_node, body_ptr);
+    VListPtr cur_vlist_ptr = body_node.vlist_ptr_, nxt_vlist_ptr;
+    VListNode cur_vlist_node, nxt_vlist_node;
+    vlistnode_fstream_.read(cur_vlist_node, cur_vlist_ptr); // must exist as an empty begin node
+    nxt_vlist_ptr = cur_vlist_node.nxt_;
+    bool has_inserted = false;
+    while(!nxt_vlist_ptr.isnull()) {
+      vlistnode_fstream_.read(nxt_vlist_node, nxt_vlist_ptr);
+      if(value > nxt_vlist_node.value_) {
+        cur_vlist_ptr = nxt_vlist_ptr;
+        cur_vlist_node = nxt_vlist_node;
+        nxt_vlist_ptr = cur_vlist_node.nxt_;
+        continue;
+      }
+      if(value == nxt_vlist_node.value_) {
+        // duplicated value. take it as insertion completed.
+        has_inserted = true;
+        break;
+      }
+      if(value < nxt_vlist_node.value_) {
+        // insert between cur_vlist and nxt_vlist
+        cur_vlist_node.nxt_ = vlistnode_fstream_.allocate({value, nxt_vlist_ptr});
+        vlistnode_fstream_.write(cur_vlist_node, cur_vlist_ptr);
+        has_inserted = true;
+        break;
+      }
+    }
+    if(!has_inserted) {
+      // cur_vlist as the end of the vlist, while nxt_vlist_ptr == nullptr.
+      // insert after cur_vlist. Just like what may happen when inserting midway.
+      cur_vlist_node.nxt_ = vlistnode_fstream_.allocate({value, nxt_vlist_ptr});
+      vlistnode_fstream_.write(cur_vlist_node, cur_vlist_ptr);
+    }
     return;
   }
   HeadPtr cur_head_ptr = begin_head_ptr_, nxt_head_ptr;
@@ -74,6 +113,7 @@ void BlockList<KeyType, ValueType, degree>::insert(const KeyType &key, const Val
     nxt_body_ptr = cur_body_node.nxt_;
     while(!nxt_body_ptr.isnull()) {
       bodynode_fstream_.read(nxt_body_node, nxt_body_ptr);
+      body_cache_.insert(nxt_body_node.key_, nxt_body_ptr);
       if(key > nxt_body_node.key_) {
         cur_body_ptr = nxt_body_ptr;
         cur_body_node = nxt_body_node;
@@ -164,6 +204,34 @@ template<class KeyType, class ValueType, size_t degree>
 void BlockList<KeyType, ValueType, degree>::erase(const KeyType &key, const ValueType &value) {
   if(begin_head_ptr_.isnull())
     return; // empty
+  if(auto [body_ptr, is_succeed] = body_cache_.find(key); is_succeed) {
+    // key found in nxt_body_node.
+    BodyNode body_node;
+    bodynode_fstream_.read(body_node, body_ptr);
+    VListPtr cur_vlist_ptr = body_node.vlist_ptr_, nxt_vlist_ptr;
+    VListNode cur_vlist_node, nxt_vlist_node;
+    vlistnode_fstream_.read(cur_vlist_node, cur_vlist_ptr); // must exist as an empty begin node
+    nxt_vlist_ptr = cur_vlist_node.nxt_;
+    while(!nxt_vlist_ptr.isnull()) {
+      vlistnode_fstream_.read(nxt_vlist_node, nxt_vlist_ptr);
+      if(value > nxt_vlist_node.value_) {
+        cur_vlist_ptr = nxt_vlist_ptr;
+        cur_vlist_node = nxt_vlist_node;
+        nxt_vlist_ptr = cur_vlist_node.nxt_;
+        continue;
+      }
+      if(value == nxt_vlist_node.value_) {
+        // nxt_vlist contains the value to erase.
+        cur_vlist_node.nxt_ = nxt_vlist_node.nxt_;
+        vlistnode_fstream_.write(cur_vlist_node, cur_vlist_ptr);
+        vlistnode_fstream_.free(nxt_vlist_ptr);
+        // erm, I'd not like to deal with empty vlist here.
+        }
+        return; // important
+      }
+    // value too large, not found
+    return;
+  }
   HeadPtr cur_head_ptr = begin_head_ptr_, nxt_head_ptr;
   HeadNode cur_head_node, nxt_head_node;
   headnode_fstream_.read(cur_head_node, cur_head_ptr); // must exist as the empty begin node
@@ -183,6 +251,7 @@ void BlockList<KeyType, ValueType, degree>::erase(const KeyType &key, const Valu
     nxt_body_ptr = cur_body_node.nxt_;
     while(!nxt_body_ptr.isnull()) {
       bodynode_fstream_.read(nxt_body_node, nxt_body_ptr);
+      body_cache_.insert(nxt_body_node.key_, nxt_body_ptr);
       if(key > nxt_body_node.key_) {
         cur_body_ptr = nxt_body_ptr;
         cur_body_node = nxt_body_node;
@@ -283,6 +352,23 @@ std::vector<ValueType> BlockList<KeyType, ValueType, degree>::operator[](const K
   std::vector<ValueType> res;
     if(begin_head_ptr_.isnull())
     return res; // empty
+  if(auto [body_ptr, is_succeed] = body_cache_.find(key); is_succeed) {
+    BodyNode body_node;
+    bodynode_fstream_.read(body_node, body_ptr);
+    // key found in body_node.
+    VListPtr cur_vlist_ptr = body_node.vlist_ptr_, nxt_vlist_ptr;
+    VListNode cur_vlist_node, nxt_vlist_node;
+    vlistnode_fstream_.read(cur_vlist_node, cur_vlist_ptr); // must exist as an empty begin node
+    nxt_vlist_ptr = cur_vlist_node.nxt_;
+    while(!nxt_vlist_ptr.isnull()) {
+      vlistnode_fstream_.read(nxt_vlist_node, nxt_vlist_ptr);
+      res.push_back(nxt_vlist_node.value_);
+      cur_vlist_ptr = nxt_vlist_ptr;
+      cur_vlist_node = nxt_vlist_node;
+      nxt_vlist_ptr = cur_vlist_node.nxt_;
+    }
+    return res;
+  }
   HeadPtr cur_head_ptr = begin_head_ptr_, nxt_head_ptr;
   HeadNode cur_head_node, nxt_head_node;
   headnode_fstream_.read(cur_head_node, cur_head_ptr); // must exist as the empty begin node
@@ -302,6 +388,7 @@ std::vector<ValueType> BlockList<KeyType, ValueType, degree>::operator[](const K
     nxt_body_ptr = cur_body_node.nxt_;
     while(!nxt_body_ptr.isnull()) {
       bodynode_fstream_.read(nxt_body_node, nxt_body_ptr);
+      body_cache_.insert(nxt_body_node.key_, nxt_body_ptr);
       if(key > nxt_body_node.key_) {
         cur_body_ptr = nxt_body_ptr;
         cur_body_node = nxt_body_node;

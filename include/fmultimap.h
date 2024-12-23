@@ -14,6 +14,7 @@
 #define F_MULTIMAP_H
 
 #include "filestream.h"
+#include "lrucache.h"
 
 #include <vector>
 #include <utility>
@@ -49,13 +50,13 @@ public:
 
 
   // open BLinkTree files.
-  void open(const filenameType &map_filename, const filenameType &vlist_filename);
+  void open(const filenameType &filename_suffix);
   // close BLinkTree files
   void close();
 
   void insert(const KeyType &key, const ValueType &value);
   // returns the list of value with the provided key.
-  std::vector<ValueType> find(const KeyType &key);
+  std::vector<ValueType> operator[](const KeyType &key);
   void erase(const KeyType &key, const ValueType &value);
 
   // todo: iterator
@@ -95,6 +96,8 @@ private:
   Fstream<VlistNode, size_t, elementCount> vlist_fstream_;
   MnodePtr root_ptr_{};
   bool is_open = false;
+
+  LRUCache<KeyType, MnodePtr, 30> mnode_cache_;
 };
 
 } // namespace StarryPurple

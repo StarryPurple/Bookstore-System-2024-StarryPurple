@@ -18,9 +18,9 @@ Fmultimap<KeyType, ValueType, degree, elementCount>::~Fmultimap() {
 
 template<class KeyType, class ValueType, size_t degree, size_t elementCount>
 void Fmultimap<KeyType, ValueType, degree, elementCount>::open(
-  const filenameType &map_filename, const filenameType &vlist_filename) {
-  map_fstream_.open(map_filename);
-  vlist_fstream_.open(vlist_filename);
+  const filenameType &filename_suffix) {
+  map_fstream_.open(filename_suffix + "_map.bsdat");
+  vlist_fstream_.open(filename_suffix + "_vlist.bsdat");
   is_open = true;
 
   map_fstream_.read_info(root_ptr_);
@@ -402,7 +402,7 @@ void Fmultimap<KeyType, ValueType, degree, elementCount>::insert(const KeyType &
 
 
 template<class KeyType, class ValueType, size_t degree, size_t elementCount>
-std::vector<ValueType> Fmultimap<KeyType, ValueType, degree, elementCount>::find(const KeyType &key) {
+std::vector<ValueType> Fmultimap<KeyType, ValueType, degree, elementCount>::operator[](const KeyType &key) {
   std::vector<ValueType> res;
   std::vector<std::pair<MnodePtr, size_t>> route = upper_bound_route(key);
   if(route.empty()) return res; // nothing found.

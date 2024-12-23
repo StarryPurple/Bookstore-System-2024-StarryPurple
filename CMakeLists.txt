@@ -12,6 +12,7 @@ add_executable(code
         Main.cpp
         src/BookStoreExceptions.cpp
         src/filestream.cpp
+        src/lrucache.cpp
         src/blocklist.cpp
         src/fmultimap.cpp
         src/validator.cpp)
