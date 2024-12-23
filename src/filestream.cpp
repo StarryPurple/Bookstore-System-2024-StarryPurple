@@ -106,8 +106,10 @@ void Fstream<StorageType, InfoType, elementCount>::close() {
 template<class StorageType, class InfoType, size_t elementCount>
 Fpointer<elementCount>
 Fstream<StorageType, InfoType, elementCount>::allocate() {
-  if(!file_.is_open())
+  if(!file_.is_open()) {
+    assert(false);
     throw FileExceptions("Allocating storage while no file is open");
+  }
   offsetType loc = lru_loc_;
   while(loc < elementCount && bitmap_[loc]) loc++;
   if(loc != elementCount)
@@ -117,13 +119,15 @@ Fstream<StorageType, InfoType, elementCount>::allocate() {
     while(loc < lru_loc_ && bitmap_[loc]) loc++;
     if(loc != elementCount)
       lru_loc_ = loc;
-    else
+    else {
+      assert(false);
       throw FileExceptions("Storage is full in file \"" + filename_ + "\"");
+    }
   }
   StorageType placeholder{};
   fpointer ptr{lru_loc_};
+  bitmap_[lru_loc_] = true; // occupy the block before call of "write"
   write(placeholder, ptr);
-  bitmap_[lru_loc_] = true;
   return ptr;
 }
 
@@ -184,7 +188,7 @@ void Fstream<StorageType, InfoType, elementCount>::write(const StorageType &data
   if(offset >= elementCount)
     throw FileExceptions("Invalid reference in file \"" + filename_ + "\"");
   if(!bitmap_[offset])
-    throw FileExceptions("Reading unallocated storage in file \"" + filename_ + "\"");
+    throw FileExceptions("Writing unallocated storage in file \"" + filename_ + "\"");
   file_.seekp(cInfoSize + cStorageSize * offset, std::ios::beg);
   file_.write(reinterpret_cast<const char *>(&data), cStorageSize);
 }

@@ -10,9 +10,13 @@
 #include <cstring>
 using namespace std;
 using StarryPurple::Fmultimap;
+using StarryPurple::BlockList;
 
 struct KeyType {
-  KeyType() = default;
+  KeyType() {
+    for(int i = 0; i < 65; i++)
+      val[i] = '\0';
+  }
 
   KeyType(const KeyType &other) {
     for(int i = 0; i < 65; i++)
@@ -94,7 +98,8 @@ struct std::hash<KeyType> {
 
 using ValueType = int;
 // sqrt(1e5) ~ 316.2
-Fmultimap<KeyType, ValueType, 40, 100000> multimap;
+// Fmultimap<KeyType, ValueType, 40, 100000> multimap;
+BlockList<KeyType, ValueType, 500> multimap;
 
 void insert(const KeyType &key, const ValueType value) {
   multimap.insert(key, value);
@@ -119,7 +124,7 @@ int main() {
   multimap.open(filename_suffix);
   int n; cin >> n;
   string oper, key_str;
-  KeyType key{};
+  KeyType key;
   ValueType value;
   while(n--) {
     cin >> oper;

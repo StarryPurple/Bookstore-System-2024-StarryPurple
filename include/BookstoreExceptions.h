@@ -10,6 +10,7 @@
 #define BOOKSTORE_EXCEPTIONS_H
 
 #include <stdexcept>
+#include <iostream>
 
 namespace StarryPurple {
 

@@ -39,14 +39,14 @@ public:
 
   Fmultimap() = default;
   ~Fmultimap(); // remember to close files.
-  // the route to upper_bound result.
-  // if tree is empty, returns an empty vector.
-  // if finding fails (key too big), the result end with {leaf_ptr, degree + 1}
-  std::vector<std::pair<MnodePtr, size_t>> upper_bound_route(const KeyType &key);
+
+  // the location of upper_bound. (leaf node)
+  // if key too big, returns {the leaf node right to the last pos, degree + 1}.
+  std::pair<MnodePtr, size_t> upper_bound(const KeyType &key);
   // the route to lower_bound result.
   // if tree is empty, returns an empty vector.
   // if finding fails (key too small), the result is {leaf_ptr, degree + 1}
-  std::vector<std::pair<MnodePtr, size_t>> lower_bound_route(const KeyType &key);
+  // std::vector<std::pair<MnodePtr, size_t>> lower_bound_route(const KeyType &key);
 
 
   // open BLinkTree files.
@@ -62,10 +62,12 @@ public:
   // todo: iterator
 private:
 
-  void merge(const MnodePtr &parent_ptr, size_t left_pos); // [1, 2], [5] --> [1, 2, 5]
-  void move_from_left(const MnodePtr &parent_ptr, size_t left_pos); // [1, 2, 3, 4], ->[5] --> [1, 2, 3], ->[4, 5]
-  void move_from_right(const MnodePtr &parent_ptr, size_t left_pos); // ->[1], [3, 4, 5, 6] --> ->[1, 3], [4, 5, 6]
-  void split(const MnodePtr &parent_ptr, size_t pos); // ->[1, 2, 3, 4, 5] --> ->[1, 2], [3, 4, 5]
+  void merge(const MnodePtr &parent_ptr, MapNode &parent_node, size_t left_pos); // [1, 2], [5] --> [1, 2, 5]
+  // void move_from_left(const MnodePtr &parent_ptr, size_t left_pos); // [1, 2, 3, 4], ->[5] --> [1, 2, 3], ->[4, 5]
+  // void move_from_right(const MnodePtr &parent_ptr, size_t left_pos); // ->[1], [3, 4, 5, 6] --> ->[1, 3], [4, 5, 6]
+  void average(const MnodePtr &parent_ptr, MapNode &parent_node, size_t left_pos);
+  void split(const MnodePtr &parent_ptr, MapNode &parent_node, size_t pos); // ->[1, 2, 3, 4, 5] --> ->[1, 2], [3, 4, 5]
+  void maintain_size(const MnodePtr &mnode_ptr, MapNode &mnode); // mnode to be the maintained one
 
   struct MapNode {
 
@@ -78,7 +80,6 @@ private:
     KeyType key_[degree + 1]{};
     MnodePtr mnode_ptr_[degree + 1]{}; // nullptr for is_leaf_ = true
     VlistPtr vlist_ptr_[degree + 1]{}; // the begin of the list. nullptr for is_leaf_ = false
-    // todo: reduce space cost by using union or std::variant<MnodePtr, VlistPtr>
   };
   // a link-list of values.
   // arranged in order (operator<)

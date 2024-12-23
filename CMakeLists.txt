@@ -3,6 +3,9 @@ project(Bookstore_StarryPurple)
 
 set(CMAKE_CXX_STANDARD 20)
 
+set(CMAKE_CXX_FLAGS -Ofast)
+#set(CMAKE_CXX_FLAGS_DEBUG -O2)
+
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${PROJECT_SOURCE_DIR}/src)
 
