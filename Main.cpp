@@ -98,8 +98,8 @@ struct std::hash<KeyType> {
 
 using ValueType = int;
 // sqrt(1e5) ~ 316.2
-// Fmultimap<KeyType, ValueType, 40, 100000> multimap;
-BlockList<KeyType, ValueType, 500> multimap;
+Fmultimap<KeyType, ValueType, 40, 100010> multimap;
+// BlockList<KeyType, ValueType, 500> multimap;
 
 void insert(const KeyType &key, const ValueType value) {
   multimap.insert(key, value);
@@ -120,6 +120,8 @@ void erase(const KeyType &key, const ValueType value) {
 }
 
 int main() {
+  freopen("input.txt", "r", stdin);
+  freopen("output.txt", "w", stdout);
   string filename_suffix = "test";
   multimap.open(filename_suffix);
   int n; cin >> n;
@@ -142,6 +144,7 @@ int main() {
     }
   }
   multimap.close();
+  fclose(stdin); fclose(stdout);
   return 0;
 }
 /*

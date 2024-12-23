@@ -4,8 +4,8 @@
  *
  * Includes some useful data structures;
  *
- * fmultimap / BLink Tree:
- *   A concurrency-friendly data structure widely used in file io.
+ * fmultimap / B Plus Tree:
+ *   A (concurrency-friendly) data structure widely used in file io.
  *   supports basic functions of a key-value map similar to std::multimap, but with file storage.
  */
 
@@ -26,79 +26,71 @@ namespace StarryPurple {
 // no ValueType is directly used. we only reads and passes fpointer of ValueType.
 template<class KeyType, class ValueType, size_t degree = 1 << 7, size_t elementCount = cElementCount>
 class Fmultimap {
-
-  static_assert(degree >= 6); // used in erase(...)
-
-  struct MapNode;
+  struct InnerNode;
   struct VlistNode;
-
+  using InnerPtr = Fpointer<2 * elementCount / degree + 10>;
+  using VlistPtr = Fpointer<elementCount>;
+  using InnerFstream = Fstream<InnerNode, InnerPtr, 2 * elementCount / degree + 10>;
+  using VlistFstream = Fstream<VlistNode, VlistPtr, elementCount>;
+private:
+  struct InnerNode {
+    bool is_leaf = false;
+    KeyType high_key;
+    InnerPtr parent_ptr;
+    size_t node_size = 0;
+    KeyType keys[degree + 1];
+    InnerPtr inner_ptrs[degree + 1];
+    VlistPtr vlist_ptrs[degree + 1];
+  };
+  struct VlistNode {
+    ValueType value;
+    VlistPtr nxt;
+  };
+  InnerFstream inner_fstream;
+  VlistFstream vlist_fstream;
+  bool is_open = false;
+  InnerPtr root_ptr; // parent_ptr of root_node is "nullptr"
 public:
-
-  using VlistPtr = Fpointer<elementCount>; // ptr of VlistNode
-  using MnodePtr = Fpointer<elementCount / degree * 2>; // ptr of MapNode
-
   Fmultimap() = default;
-  ~Fmultimap(); // remember to close files.
-
-  // the location of upper_bound. (leaf node)
-  // if key too big, returns {the leaf node right to the last pos, degree + 1}.
-  std::pair<MnodePtr, size_t> upper_bound(const KeyType &key);
-  // the route to lower_bound result.
-  // if tree is empty, returns an empty vector.
-  // if finding fails (key too small), the result is {leaf_ptr, degree + 1}
-  // std::vector<std::pair<MnodePtr, size_t>> lower_bound_route(const KeyType &key);
-
-
-  // open BLinkTree files.
-  void open(const filenameType &filename_suffix);
-  // close BLinkTree files
+  ~Fmultimap();
+  void open(const filenameType &name_suffix);
   void close();
 
   void insert(const KeyType &key, const ValueType &value);
-  // returns the list of value with the provided key.
-  std::vector<ValueType> operator[](const KeyType &key);
   void erase(const KeyType &key, const ValueType &value);
+  std::vector<ValueType> operator[](const KeyType &key);
 
-  // todo: iterator
-private:
+  // after splitting, split_node will become its parent node,
+  // split_ptr will become the pointer of the original split_node/
+  void split(
+    const size_t &split_pos,
+     InnerPtr &split_ptr, InnerNode &split_node);
+  /*
+  void merge(
+    const InnerPtr &parent_ptr,
+    size_t left_pos,
+    const InnerNode &left_node, const InnerNode &right_node);
+  void average_left(
+    const InnerPtr &parent_ptr,
+    size_t left_pos,
+    const InnerNode &left_node, const InnerNode &right_node);
+  void average_right(
+    const InnerPtr &parent_ptr,
+    size_t left_pos,
+    const InnerNode &left_node, const InnerNode &right_node);
+    */
+  // after maintenance, maintain_node will become its parent node.
+  // when there's only split operation.
+  void maintain_size(
+    std::vector<size_t> &pos_route,
+    InnerPtr &maintain_ptr, InnerNode &maintain_node);
+  /* reserved for LRU Cache optimization.
+   * At that time we can't have a complete pos_route.
+  void maintain_size(
+    std::vector<size_t> &pos_route,
+    const InnerNode &maintain_node);
+    */
 
-  void merge(const MnodePtr &parent_ptr, MapNode &parent_node, size_t left_pos); // [1, 2], [5] --> [1, 2, 5]
-  // void move_from_left(const MnodePtr &parent_ptr, size_t left_pos); // [1, 2, 3, 4], ->[5] --> [1, 2, 3], ->[4, 5]
-  // void move_from_right(const MnodePtr &parent_ptr, size_t left_pos); // ->[1], [3, 4, 5, 6] --> ->[1, 3], [4, 5, 6]
-  void average(const MnodePtr &parent_ptr, MapNode &parent_node, size_t left_pos);
-  void split(const MnodePtr &parent_ptr, MapNode &parent_node, size_t pos); // ->[1, 2, 3, 4, 5] --> ->[1, 2], [3, 4, 5]
-  void maintain_size(const MnodePtr &mnode_ptr, MapNode &mnode); // mnode to be the maintained one
-
-  struct MapNode {
-
-    MapNode() = default;
-
-    bool is_leaf_ = false;
-    int node_size_ = 0;
-    KeyType high_key_{};
-    MnodePtr parent_ptr_{}, link_ptr_{};
-    KeyType key_[degree + 1]{};
-    MnodePtr mnode_ptr_[degree + 1]{}; // nullptr for is_leaf_ = true
-    VlistPtr vlist_ptr_[degree + 1]{}; // the begin of the list. nullptr for is_leaf_ = false
-  };
-  // a link-list of values.
-  // arranged in order (operator<)
-  struct VlistNode {
-
-    VlistNode() = default;
-    VlistNode(const ValueType &value, const VlistPtr &next_ptr);
-    ~VlistNode() = default;
-
-    ValueType value_{};
-    VlistPtr next_ptr_{};
-  };
-
-  Fstream<MapNode, MnodePtr, elementCount / degree * 2> map_fstream_;
-  Fstream<VlistNode, size_t, elementCount> vlist_fstream_;
-  MnodePtr root_ptr_{};
-  bool is_open = false;
-
-  LRUCache<KeyType, MnodePtr, 30> mnode_cache_;
 };
 
 } // namespace StarryPurple
