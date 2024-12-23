@@ -120,8 +120,8 @@ void erase(const KeyType &key, const ValueType value) {
 }
 
 int main() {
-  freopen("input.txt", "r", stdin);
-  freopen("output.txt", "w", stdout);
+  // freopen("input.txt", "r", stdin);
+  // freopen("output.txt", "w", stdout);
   string filename_suffix = "test";
   multimap.open(filename_suffix);
   int n; cin >> n;
@@ -144,7 +144,7 @@ int main() {
     }
   }
   multimap.close();
-  fclose(stdin); fclose(stdout);
+  // fclose(stdin); fclose(stdout);
   return 0;
 }
 /*
