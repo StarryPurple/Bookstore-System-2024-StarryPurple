@@ -126,11 +126,11 @@ void BlockList<KeyType, ValueType, degree>::insert(const KeyType &key, const Val
       }
     }
     // insertion must have been completed, for key <= high_key_.
-    ++cur_head_node.body_len_;
-    headnode_fstream_.write(cur_head_node, cur_head_ptr);
+    ++nxt_head_node.body_len_;
+    headnode_fstream_.write(nxt_head_node, nxt_head_ptr);
     // attention: head_node split may happen.
-    if(cur_head_node.body_len_ == degree)
-      split(cur_head_ptr, cur_head_node);
+    if(nxt_head_node.body_len_ == degree)
+      split(nxt_head_ptr, nxt_head_node);
     return;
   }
   // key is larger than any key existing.
@@ -213,7 +213,7 @@ void BlockList<KeyType, ValueType, degree>::erase(const KeyType &key, const Valu
             vlistnode_fstream_.write(cur_vlist_node, cur_vlist_ptr);
             vlistnode_fstream_.free(nxt_vlist_ptr);
             // now check if nxt_body_node and nxt_head_node need to be erased or merged.
-            if(cur_vlist_ptr == nxt_body_node.vlist_ptr_ && cur_vlist_node.nxt_ == VListPtr()) {
+            if(cur_vlist_ptr == nxt_body_node.vlist_ptr_ && cur_vlist_node.nxt_.isnull()) {
               // this body node should be freed.
               vlistnode_fstream_.free(cur_vlist_ptr);
               cur_body_node.nxt_ = nxt_body_node.nxt_;
@@ -263,7 +263,9 @@ void BlockList<KeyType, ValueType, degree>::erase(const KeyType &key, const Valu
                 // then never care! It's accepted.
                 return;
               }
+              return; // redundant
             }
+            return; // important
           }
         }
         // value too large, not found
@@ -368,7 +370,7 @@ void BlockList<KeyType, ValueType, degree>::merge(
   BodyNode cur_body_node, nxt_body_node;
   bodynode_fstream_.read(cur_body_node, cur_body_ptr);
   nxt_body_ptr = cur_body_node.nxt_;
-  for(int i = 0; i < left_node.body_len_ - 1; i++) {
+  for(int i = 0; i < left_node.body_len_; i++) {
     bodynode_fstream_.read(nxt_body_node, nxt_body_ptr);
     cur_body_ptr = nxt_body_ptr;
     cur_body_node = nxt_body_node;

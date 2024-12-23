@@ -12,9 +12,9 @@ class BlockList {
   struct HeadNode;
   struct BodyNode;
   struct VListNode;
-  using HeadPtr = Fpointer<degree + 1>; // + 1 to distinguish from each other.
-  using BodyPtr = Fpointer<degree + 2>; // + 2 to distinguish from each other.
-  using VListPtr = Fpointer<degree + 3>; // + 3 to distinguish from each other.
+  using HeadPtr = Fpointer<degree>;
+  using BodyPtr = Fpointer<degree * degree>;
+  using VListPtr = Fpointer<degree * degree + 1>; // + 1 to distinguish from each other.
 private:
   struct HeadNode {
     KeyType high_key_{};
@@ -39,9 +39,9 @@ private:
   };
   bool is_open = false;
   HeadPtr begin_head_ptr_{};
-  Fstream<HeadNode, HeadPtr, degree + 1> headnode_fstream_; // + 1 to distinguish from each other.
-  Fstream<BodyNode, size_t, degree + 2> bodynode_fstream_; // + 2 to distinguish from each other.
-  Fstream<VListNode, size_t, degree + 3> vlistnode_fstream_; // + 3 to distinguish from each other.
+  Fstream<HeadNode, HeadPtr, degree> headnode_fstream_;
+  Fstream<BodyNode, size_t, degree * degree> bodynode_fstream_;
+  Fstream<VListNode, size_t, degree * degree + 1> vlistnode_fstream_; // + 1 to distinguish from each other.
 public:
   BlockList() = default;
   ~BlockList();
