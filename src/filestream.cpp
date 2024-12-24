@@ -85,9 +85,13 @@ void Fstream<StorageType, InfoType, capacity>::open(const filenameType &filename
       bitmap_[i] = false;
       file_.write(reinterpret_cast<const char *>(&bitmap_[i]), sizeof(bool));
     }
+    // no need to write that much at first.
+    // since the lru_pos adds up 1 by 1, this write is unnecessary and much time_consuming.
+    /*
     StorageType placeholder;
     for(size_t i = 0; i < capacity; i++)
       file_.write(reinterpret_cast<const char *>(&placeholder), cStorageSize);
+      */
   }
 }
 
