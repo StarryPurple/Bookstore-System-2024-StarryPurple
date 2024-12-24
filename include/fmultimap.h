@@ -63,7 +63,7 @@ public:
   // after splitting, split_node will become its parent node,
   // split_ptr will become the pointer of the original split_node/
   void split(
-    const size_t &split_pos,
+    const size_t split_pos,
      InnerPtr &split_ptr, InnerNode &split_node);
   /*
   void merge(
@@ -82,14 +82,7 @@ public:
   // after maintenance, maintain_node will become its parent node.
   // when there's only split operation.
   void maintain_size(
-    std::vector<size_t> &pos_route,
     InnerPtr &maintain_ptr, InnerNode &maintain_node);
-  /* reserved for LRU Cache optimization.
-   * At that time we can't have a complete pos_route.
-  void maintain_size(
-    std::vector<size_t> &pos_route,
-    const InnerNode &maintain_node);
-    */
 
 };
 

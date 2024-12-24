@@ -45,7 +45,6 @@ void Fmultimap<KeyType, ValueType, degree, elementCount>::insert(
   InnerPtr cur_inner_ptr = root_ptr;
   InnerNode cur_inner_node; inner_fstream.read(cur_inner_node, cur_inner_ptr);
   size_t pos;
-  std::vector<size_t> pos_route; // records the pos every time we choose.
   while(true) {
     if(cur_inner_node.is_leaf && key > cur_inner_node.high_key) {
       VlistNode vlist_node;
@@ -59,7 +58,7 @@ void Fmultimap<KeyType, ValueType, degree, elementCount>::insert(
       cur_inner_node.vlist_ptrs[cur_inner_node.node_size - 1] = vlist_fstream.allocate(vlist_begin_node);
       inner_fstream.write(cur_inner_node, cur_inner_ptr);
       // node_size modified. Start maintenance.
-      maintain_size(pos_route, cur_inner_ptr, cur_inner_node);
+      maintain_size(cur_inner_ptr, cur_inner_node);
       return;
     }
     if(cur_inner_node.is_leaf) {
@@ -73,7 +72,6 @@ void Fmultimap<KeyType, ValueType, degree, elementCount>::insert(
       break;
     }
     if(key > cur_inner_node.high_key) {
-      pos_route.push_back(cur_inner_node.node_size - 1);
       cur_inner_node.high_key = key;
       cur_inner_node.keys[cur_inner_node.node_size - 1] = key;
       inner_fstream.write(cur_inner_node, cur_inner_ptr);
@@ -87,7 +85,6 @@ void Fmultimap<KeyType, ValueType, degree, elementCount>::insert(
       if(key > cur_inner_node.keys[mid]) l = mid + 1;
       else r = mid;
     }
-    pos_route.push_back(l);
     cur_inner_ptr = cur_inner_node.inner_ptrs[l];
     inner_fstream.read(cur_inner_node, cur_inner_ptr);
   }
@@ -106,7 +103,7 @@ void Fmultimap<KeyType, ValueType, degree, elementCount>::insert(
     cur_inner_node.vlist_ptrs[pos] = vlist_fstream.allocate(vlist_begin_node);
     inner_fstream.write(cur_inner_node, cur_inner_ptr);
     // node_size modified. Start maintenance.
-    maintain_size(pos_route, cur_inner_ptr, cur_inner_node);
+    maintain_size(cur_inner_ptr, cur_inner_node);
     return;
   }
   // assert(key == cur_inner_node.keys[pos]);
@@ -230,34 +227,45 @@ std::vector<ValueType> Fmultimap<KeyType, ValueType, degree, elementCount>::oper
 
 template<class KeyType, class ValueType, size_t degree, size_t elementCount>
 void Fmultimap<KeyType, ValueType, degree, elementCount>::maintain_size(
-  std::vector<size_t> &pos_route, InnerPtr &maintain_ptr, InnerNode &maintain_node) {
-  // Temporarily we just deal with node_size large enough to split.
-  while(!pos_route.empty() && maintain_node.node_size >= degree) {
-    size_t pos = pos_route.back();
-    pos_route.pop_back();
-    split(pos, maintain_ptr, maintain_node);
-  }
-  // here maintain_ptr = root_ptr, maintain_node is the root node.
-  // assert(maintain_ptr == root_ptr);
-  if(maintain_node.node_size >= degree) {
-    // create a new root.
-    InnerNode new_root;
-    new_root.is_leaf = false; new_root.high_key = maintain_node.high_key;
-    // new_root.parent_ptr = "nullptr"
-    new_root.node_size = 1;
-    new_root.keys[0] = maintain_node.high_key;
-    new_root.inner_ptrs[0] = maintain_ptr;
-    // You can do the split completely here to reduce two file operations.
-    // But I'm lazy now. or to say crazy? So I refuse.
-    root_ptr = maintain_node.parent_ptr = inner_fstream.allocate(new_root);
-    inner_fstream.write(maintain_node, maintain_ptr);
-    split(0, maintain_ptr, maintain_node);
+  InnerPtr &maintain_ptr, InnerNode &maintain_node) {
+  while(true) {
+    if(maintain_node.node_size >= degree) {
+      // here maintain_ptr = root_ptr, maintain_node is the root node.
+      if(maintain_ptr == root_ptr) {
+        // create a new root.
+        InnerNode new_root;
+        new_root.is_leaf = false; new_root.high_key = maintain_node.high_key;
+        // new_root.parent_ptr = "nullptr"
+        new_root.node_size = 1;
+        new_root.keys[0] = maintain_node.high_key;
+        new_root.inner_ptrs[0] = maintain_ptr;
+        // You can do the split completely here to reduce two file operations.
+        // But I'm lazy now. or to say crazy? So I refuse.
+        root_ptr = maintain_node.parent_ptr = inner_fstream.allocate(new_root);
+        inner_fstream.write(maintain_node, maintain_ptr);
+        split(0, maintain_ptr, maintain_node);
+        return;
+      }
+      // find the split_pos.
+      InnerNode parent_node; inner_fstream.read(parent_node, maintain_node.parent_ptr);
+      size_t l = 0, r = parent_node.node_size - 1;
+      while(l < r) {
+        size_t mid = (l + r) >> 1;
+        if(maintain_node.high_key > parent_node.keys[mid]) l = mid + 1;
+        else r = mid;
+      }
+      assert(maintain_node.high_key == parent_node.keys[l]);
+      split(l, maintain_ptr, maintain_node);
+      continue;
+    }
+    // if(maintain_node.node_size < degree / 2) {...}
+    return;
   }
 }
 
 template<class KeyType, class ValueType, size_t degree, size_t elementCount>
 void Fmultimap<KeyType, ValueType, degree, elementCount>::split(
-  const size_t &split_pos, InnerPtr &split_ptr, InnerNode &split_node) {
+  const size_t split_pos, InnerPtr &split_ptr, InnerNode &split_node) {
   // split a new node and insert it into the right pos.
   size_t left_size = split_node.node_size / 2, right_size = split_node.node_size - left_size;
 
