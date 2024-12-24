@@ -27,35 +27,29 @@ namespace StarryPurple {
 template<class KeyType, class ValueType, size_t degree = 1 << 7, size_t capacity = cCapacity>
 class Fmultimap {
   struct InnerNode;
-  struct VlistNode;
   using InnerPtr = Fpointer<2 * capacity / degree + 10>;
-  using VlistPtr = Fpointer<capacity>;
   using InnerFstream = Fstream<InnerNode, InnerPtr, 2 * capacity / degree + 10>;
-  using VlistFstream = Fstream<VlistNode, VlistPtr, capacity>;
+  using KVPairType = std::pair<KeyType, ValueType>;
 private:
   struct InnerNode {
     // todo: add this_ptr
     bool is_leaf = false;
-    KeyType high_key;
+    InnerPtr link_ptr;
+    KVPairType high_kv;
     InnerPtr parent_ptr;
     size_t node_size = 0;
-    KeyType keys[degree + 1];
+    KVPairType kv_pairs[degree + 1];
     InnerPtr inner_ptrs[degree + 1];
-    VlistPtr vlist_ptrs[degree + 1];
   };
+  /*
   struct VlistNode {
     // todo: add this_ptr
     ValueType value;
     VlistPtr nxt;
-  };
+  };*/
   InnerFstream inner_fstream;
-  VlistFstream vlist_fstream;
   bool is_open = false;
   InnerPtr root_ptr; // parent_ptr of root_node is "nullptr"
-  // stores the pointer of the visited empty begin vlistnode.
-  // doesn't mess around with inner nodes.
-  // todo: Cache doesn't support erasing pages. So if K-V erasing is to be implemented, please fix it.
-  LRUCache<KeyType, VlistPtr, (capacity >> 8)> vlist_begin_cache;
 public:
   Fmultimap() = default;
   ~Fmultimap();
@@ -70,7 +64,7 @@ public:
   // split_ptr will become the pointer of the original split_node.
   // Attention: the parent_ptr of split_node.inner_nodes won't be updated here.
   void split(
-    const size_t split_pos,
+    size_t split_pos,
      InnerPtr &split_ptr, InnerNode &split_node);
   /*
   void merge(
