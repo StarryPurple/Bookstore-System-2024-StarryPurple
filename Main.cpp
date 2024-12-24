@@ -99,8 +99,9 @@ struct std::hash<KeyType> {
 using ValueType = int;
 // Oh, I know. not all space reserved can be used without key space reallocate.
 // for this B+Tree has at most 4 layers (log_(24)^(100000) = 3.62), set 2 ^ 3.62 ~ 12 times spare space may be better.
-// but that would be too large. I'd prefer 10.
-Fmultimap<KeyType, ValueType, 48, 100100 * 10> multimap;
+// but that would be too large. I'd prefer 6.
+// memory limit exceeded. lol.
+Fmultimap<KeyType, ValueType, 48, 100100 * 6> multimap;
 // sqrt(1e5) ~ 316.2
 // BlockList<KeyType, ValueType, 500> multimap;
 
