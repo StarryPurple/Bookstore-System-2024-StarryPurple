@@ -42,7 +42,7 @@ void Fmultimap<KeyType, ValueType, degree, elementCount>::insert(
     // initialize requires no maintain_size.
     return;
   }
-  InnerPtr cur_inner_ptr = root_ptr;
+  InnerPtr cur_inner_ptr = root_ptr, parent_ptr; // parent_ptr = "nullptr" = root_ptr.parent_ptr
   InnerNode cur_inner_node; inner_fstream.read(cur_inner_node, cur_inner_ptr);
   size_t pos;
   while(true) {
@@ -53,6 +53,7 @@ void Fmultimap<KeyType, ValueType, degree, elementCount>::insert(
       vlist_begin_node.nxt = vlist_fstream.allocate(vlist_node);
 
       ++cur_inner_node.node_size;
+      cur_inner_node.parent_ptr = parent_ptr;
       cur_inner_node.high_key = key;
       cur_inner_node.keys[cur_inner_node.node_size - 1] = key;
       cur_inner_node.vlist_ptrs[cur_inner_node.node_size - 1] = vlist_fstream.allocate(vlist_begin_node);
@@ -62,6 +63,10 @@ void Fmultimap<KeyType, ValueType, degree, elementCount>::insert(
       return;
     }
     if(cur_inner_node.is_leaf) {
+      if(cur_inner_node.parent_ptr != parent_ptr) {
+        cur_inner_node.parent_ptr = parent_ptr;
+        inner_fstream.write(cur_inner_node, cur_inner_ptr);
+      }
       size_t l = 0, r = cur_inner_node.node_size - 1;
       while(l < r) {
         size_t mid = (l + r) >> 1;
@@ -72,12 +77,18 @@ void Fmultimap<KeyType, ValueType, degree, elementCount>::insert(
       break;
     }
     if(key > cur_inner_node.high_key) {
+      cur_inner_node.parent_ptr = parent_ptr;
       cur_inner_node.high_key = key;
       cur_inner_node.keys[cur_inner_node.node_size - 1] = key;
       inner_fstream.write(cur_inner_node, cur_inner_ptr);
+      parent_ptr = cur_inner_ptr;
       cur_inner_ptr = cur_inner_node.inner_ptrs[cur_inner_node.node_size - 1];
       inner_fstream.read(cur_inner_node, cur_inner_ptr);
       continue;
+    }
+    if(cur_inner_node.parent_ptr != parent_ptr) {
+      cur_inner_node.parent_ptr = parent_ptr;
+      inner_fstream.write(cur_inner_node, cur_inner_ptr);
     }
     size_t l = 0, r = cur_inner_node.node_size - 1;
     while(l < r) {
@@ -85,6 +96,7 @@ void Fmultimap<KeyType, ValueType, degree, elementCount>::insert(
       if(key > cur_inner_node.keys[mid]) l = mid + 1;
       else r = mid;
     }
+    parent_ptr = cur_inner_ptr;
     cur_inner_ptr = cur_inner_node.inner_ptrs[l];
     inner_fstream.read(cur_inner_node, cur_inner_ptr);
   }
@@ -135,11 +147,15 @@ template<class KeyType, class ValueType, size_t degree, size_t elementCount>
 void Fmultimap<KeyType, ValueType, degree, elementCount>::erase(
   const KeyType &key, const ValueType &value) {
   if(root_ptr.isnull()) return;
-  InnerPtr cur_inner_ptr = root_ptr;
+  InnerPtr cur_inner_ptr = root_ptr, parent_ptr; // parent_ptr = root_ptr.parent_ptr = "nullptr"
   InnerNode cur_inner_node; inner_fstream.read(cur_inner_node, cur_inner_ptr);
   if(key > cur_inner_node.high_key) return; // key too large
   size_t pos;
   while(true) {
+    if(cur_inner_node.parent_ptr != parent_ptr) {
+      cur_inner_node.parent_ptr = parent_ptr;
+      inner_fstream.write(cur_inner_node, cur_inner_ptr);
+    }
     size_t l = 0, r = cur_inner_node.node_size - 1;
     while(l < r) {
       size_t mid = (l + r) >> 1;
@@ -150,6 +166,7 @@ void Fmultimap<KeyType, ValueType, degree, elementCount>::erase(
       pos = l;
       break;
     }
+    parent_ptr = cur_inner_ptr;
     cur_inner_ptr = cur_inner_node.inner_ptrs[l];
     inner_fstream.read(cur_inner_node, cur_inner_ptr);
   }
@@ -191,11 +208,15 @@ std::vector<ValueType> Fmultimap<KeyType, ValueType, degree, elementCount>::oper
   const KeyType &key) {
   std::vector<ValueType> res;
   if(root_ptr.isnull()) return res;
-  InnerPtr cur_inner_ptr = root_ptr;
+  InnerPtr cur_inner_ptr = root_ptr, parent_ptr; // parent_ptr = root_node.parent_ptr = "nullptr"
   InnerNode cur_inner_node; inner_fstream.read(cur_inner_node, cur_inner_ptr);
   if(key > cur_inner_node.high_key) return res; // key too large
   size_t pos;
   while(true) {
+    if(cur_inner_node.parent_ptr != parent_ptr) {
+      cur_inner_node.parent_ptr = parent_ptr;
+      inner_fstream.write(cur_inner_node, cur_inner_ptr);
+    }
     size_t l = 0, r = cur_inner_node.node_size - 1;
     while(l < r) {
       size_t mid = (l + r) >> 1;
@@ -206,6 +227,7 @@ std::vector<ValueType> Fmultimap<KeyType, ValueType, degree, elementCount>::oper
       pos = l;
       break;
     }
+    parent_ptr = cur_inner_ptr;
     cur_inner_ptr = cur_inner_node.inner_ptrs[l];
     inner_fstream.read(cur_inner_node, cur_inner_ptr);
   }
@@ -298,7 +320,7 @@ void Fmultimap<KeyType, ValueType, degree, elementCount>::split(
   }
   parent_node.keys[split_pos] = split_node.high_key;
   parent_node.keys[split_pos + 1] = right_node.high_key;
-  // assert(parent_node.inner_ptrs[split_pos] == split_ptr)
+  // assert(parent_node.inner_ptrs[split_pos] == split_ptr);
   parent_node.inner_ptrs[split_pos + 1] = right_ptr;
   inner_fstream.write(parent_node, split_node.parent_ptr);
 
