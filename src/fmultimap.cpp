@@ -2,14 +2,14 @@
 
 namespace StarryPurple {
 
-template<class KeyType, class ValueType, size_t degree, size_t elementCount>
-Fmultimap<KeyType, ValueType, degree, elementCount>::~Fmultimap() {
+template<class KeyType, class ValueType, size_t degree, size_t capacity>
+Fmultimap<KeyType, ValueType, degree, capacity>::~Fmultimap() {
   if(is_open)
     close();
 }
 
-template<class KeyType, class ValueType, size_t degree, size_t elementCount>
-void Fmultimap<KeyType, ValueType, degree, elementCount>::open(
+template<class KeyType, class ValueType, size_t degree, size_t capacity>
+void Fmultimap<KeyType, ValueType, degree, capacity>::open(
   const filenameType &name_suffix) {
   inner_fstream.open(name_suffix + "_inner.bsdat");
   vlist_fstream.open(name_suffix + "_vlist.bsdat");
@@ -17,16 +17,16 @@ void Fmultimap<KeyType, ValueType, degree, elementCount>::open(
   inner_fstream.read_info(root_ptr);
 }
 
-template<class KeyType, class ValueType, size_t degree, size_t elementCount>
-void Fmultimap<KeyType, ValueType, degree, elementCount>::close() {
+template<class KeyType, class ValueType, size_t degree, size_t capacity>
+void Fmultimap<KeyType, ValueType, degree, capacity>::close() {
   inner_fstream.write_info(root_ptr);
   inner_fstream.close();
   vlist_fstream.close();
   is_open = false;
 }
 
-template<class KeyType, class ValueType, size_t degree, size_t elementCount>
-void Fmultimap<KeyType, ValueType, degree, elementCount>::insert(
+template<class KeyType, class ValueType, size_t degree, size_t capacity>
+void Fmultimap<KeyType, ValueType, degree, capacity>::insert(
   const KeyType &key, const ValueType &value) {
   if(root_ptr.isnull()) {
     VlistNode vlist_node;
@@ -42,6 +42,33 @@ void Fmultimap<KeyType, ValueType, degree, elementCount>::insert(
     // initialize requires no maintain_size.
     return;
   }
+  // cache insertion.
+  if(auto [cur_vlist_ptr, is_succeed] = vlist_begin_cache.find(key); is_succeed) {
+    // todo: write the duplicated code as a function.
+    VlistNode cur_vlist_node; vlist_fstream.read(cur_vlist_node, cur_vlist_ptr);
+    VlistPtr nxt_vlist_ptr = cur_vlist_node.nxt;
+    VlistNode nxt_vlist_node;
+    while(!nxt_vlist_ptr.isnull()) {
+      vlist_fstream.read(nxt_vlist_node, nxt_vlist_ptr);
+      if(value == nxt_vlist_node.value) return; // ignore inserting duplicated key-value pair
+      if(value < nxt_vlist_node.value) {
+        VlistNode new_vlist_node;
+        new_vlist_node.value = value; new_vlist_node.nxt = nxt_vlist_ptr;
+        cur_vlist_node.nxt = vlist_fstream.allocate(new_vlist_node);
+        vlist_fstream.write(cur_vlist_node, cur_vlist_ptr);
+        return;
+      }
+      cur_vlist_node = nxt_vlist_node;
+      cur_vlist_ptr = nxt_vlist_ptr;
+      nxt_vlist_ptr = cur_vlist_node.nxt;
+    }
+    VlistNode new_vlist_node;
+    new_vlist_node.value = value; // new_vlist_node.nxt = nxt_vlist_ptr = "nullptr"
+    cur_vlist_node.nxt = vlist_fstream.allocate(new_vlist_node);
+    vlist_fstream.write(cur_vlist_node, cur_vlist_ptr);
+    return;
+  }
+
   InnerPtr cur_inner_ptr = root_ptr, parent_ptr; // parent_ptr = "nullptr" = root_ptr.parent_ptr
   InnerNode cur_inner_node; inner_fstream.read(cur_inner_node, cur_inner_ptr);
   size_t pos;
@@ -113,12 +140,14 @@ void Fmultimap<KeyType, ValueType, degree, elementCount>::insert(
     }
     cur_inner_node.keys[pos] = key;
     cur_inner_node.vlist_ptrs[pos] = vlist_fstream.allocate(vlist_begin_node);
+    vlist_begin_cache.insert(key, cur_inner_node.vlist_ptrs[pos]);
     inner_fstream.write(cur_inner_node, cur_inner_ptr);
     // node_size modified. Start maintenance.
     maintain_size(cur_inner_ptr, cur_inner_node);
     return;
   }
   // assert(key == cur_inner_node.keys[pos]);
+  vlist_begin_cache.insert(key, cur_inner_node.vlist_ptrs[pos]);
   VlistPtr cur_vlist_ptr = cur_inner_node.vlist_ptrs[pos];
   VlistNode cur_vlist_node; vlist_fstream.read(cur_vlist_node, cur_vlist_ptr);
   VlistPtr nxt_vlist_ptr = cur_vlist_node.nxt;
@@ -143,10 +172,42 @@ void Fmultimap<KeyType, ValueType, degree, elementCount>::insert(
   vlist_fstream.write(cur_vlist_node, cur_vlist_ptr);
 }
 
-template<class KeyType, class ValueType, size_t degree, size_t elementCount>
-void Fmultimap<KeyType, ValueType, degree, elementCount>::erase(
+template<class KeyType, class ValueType, size_t degree, size_t capacity>
+void Fmultimap<KeyType, ValueType, degree, capacity>::erase(
   const KeyType &key, const ValueType &value) {
   if(root_ptr.isnull()) return;
+  if(auto [cur_vlist_ptr, is_succeed] = vlist_begin_cache.find(key); is_succeed) {
+    // todo: write the duplicated code as a function.
+    VlistNode cur_vlist_node; vlist_fstream.read(cur_vlist_node, cur_vlist_ptr);
+    VlistPtr nxt_vlist_ptr = cur_vlist_node.nxt;
+    VlistNode nxt_vlist_node;
+    while(!nxt_vlist_ptr.isnull()) {
+      vlist_fstream.read(nxt_vlist_node, nxt_vlist_ptr);
+      if(value == nxt_vlist_node.value) {
+        cur_vlist_node.nxt = nxt_vlist_node.nxt;
+        vlist_fstream.write(cur_vlist_node, cur_vlist_ptr);
+        vlist_fstream.free(nxt_vlist_ptr);
+        /* In order to avoid merging / averaging operations and their time complexty cost,
+         * Here we choose not to discard this key,
+         * at the cost of more space occupied (commonly doesn't matter) and B-plus Tree (for now) layers.
+         * But, if degree is big enough, the latter drawback will also be tiny.
+        if(cur_vlist_ptr == cur_inner_node.vlist_ptrs[pos] && cur_vlist_node.nxt.isnull()) {
+          // discard this key.
+          ...
+          // maintain_size for cur_inner_node with a size shrink
+          maintain_size(..., ..., ..., cur_inner_node);
+        }
+        */
+        return;
+      }
+      if(value < nxt_vlist_node.value) return; // value not exist
+      cur_vlist_node = nxt_vlist_node;
+      cur_vlist_ptr = nxt_vlist_ptr;
+      nxt_vlist_ptr = cur_vlist_node.nxt;
+    }
+    // if code reaches here, it means: value too big.
+    return;
+  }
   InnerPtr cur_inner_ptr = root_ptr, parent_ptr; // parent_ptr = root_ptr.parent_ptr = "nullptr"
   InnerNode cur_inner_node; inner_fstream.read(cur_inner_node, cur_inner_ptr);
   if(key > cur_inner_node.high_key) return; // key too large
@@ -172,6 +233,7 @@ void Fmultimap<KeyType, ValueType, degree, elementCount>::erase(
   }
   if(key < cur_inner_node.keys[pos]) return; // key not exist
   // assert(key == cur_inner_node.keys[pos])
+  vlist_begin_cache.insert(key, cur_inner_node.vlist_ptrs[pos]);
   VlistPtr cur_vlist_ptr = cur_inner_node.vlist_ptrs[pos];
   VlistNode cur_vlist_node; vlist_fstream.read(cur_vlist_node, cur_vlist_ptr);
   VlistPtr nxt_vlist_ptr = cur_vlist_node.nxt;
@@ -203,11 +265,25 @@ void Fmultimap<KeyType, ValueType, degree, elementCount>::erase(
   // if code reaches here, it means: value too big.
 }
 
-template<class KeyType, class ValueType, size_t degree, size_t elementCount>
-std::vector<ValueType> Fmultimap<KeyType, ValueType, degree, elementCount>::operator[](
+template<class KeyType, class ValueType, size_t degree, size_t capacity>
+std::vector<ValueType> Fmultimap<KeyType, ValueType, degree, capacity>::operator[](
   const KeyType &key) {
   std::vector<ValueType> res;
   if(root_ptr.isnull()) return res;
+  if(auto [cur_vlist_ptr, is_succeed] = vlist_begin_cache.find(key); is_succeed) {
+    // todo: write the duplicated code as a function.
+    VlistNode cur_vlist_node; vlist_fstream.read(cur_vlist_node, cur_vlist_ptr);
+    VlistPtr nxt_vlist_ptr = cur_vlist_node.nxt;
+    VlistNode nxt_vlist_node;
+    while(!nxt_vlist_ptr.isnull()) {
+      vlist_fstream.read(nxt_vlist_node, nxt_vlist_ptr);
+      res.push_back(nxt_vlist_node.value);
+      cur_vlist_node = nxt_vlist_node;
+      cur_vlist_ptr = nxt_vlist_ptr;
+      nxt_vlist_ptr = cur_vlist_node.nxt;
+    }
+    return res;
+  }
   InnerPtr cur_inner_ptr = root_ptr, parent_ptr; // parent_ptr = root_node.parent_ptr = "nullptr"
   InnerNode cur_inner_node; inner_fstream.read(cur_inner_node, cur_inner_ptr);
   if(key > cur_inner_node.high_key) return res; // key too large
@@ -233,6 +309,7 @@ std::vector<ValueType> Fmultimap<KeyType, ValueType, degree, elementCount>::oper
   }
   if(key < cur_inner_node.keys[pos]) return res; // key not exist
   // assert(key == cur_inner_node.keys[pos])
+  vlist_begin_cache.insert(key, cur_inner_node.vlist_ptrs[pos]);
   VlistPtr cur_vlist_ptr = cur_inner_node.vlist_ptrs[pos];
   VlistNode cur_vlist_node; vlist_fstream.read(cur_vlist_node, cur_vlist_ptr);
   VlistPtr nxt_vlist_ptr = cur_vlist_node.nxt;
@@ -247,11 +324,11 @@ std::vector<ValueType> Fmultimap<KeyType, ValueType, degree, elementCount>::oper
   return res;
 }
 
-template<class KeyType, class ValueType, size_t degree, size_t elementCount>
-void Fmultimap<KeyType, ValueType, degree, elementCount>::maintain_size(
+template<class KeyType, class ValueType, size_t degree, size_t capacity>
+void Fmultimap<KeyType, ValueType, degree, capacity>::maintain_size(
   InnerPtr &maintain_ptr, InnerNode &maintain_node) {
   while(true) {
-    if(maintain_node.node_size >= degree) {
+    if(maintain_node.node_size >= degree + 1) { // node_size upper limit
       // here maintain_ptr = root_ptr, maintain_node is the root node.
       if(maintain_ptr == root_ptr) {
         // create a new root.
@@ -285,8 +362,8 @@ void Fmultimap<KeyType, ValueType, degree, elementCount>::maintain_size(
   }
 }
 
-template<class KeyType, class ValueType, size_t degree, size_t elementCount>
-void Fmultimap<KeyType, ValueType, degree, elementCount>::split(
+template<class KeyType, class ValueType, size_t degree, size_t capacity>
+void Fmultimap<KeyType, ValueType, degree, capacity>::split(
   const size_t split_pos, InnerPtr &split_ptr, InnerNode &split_node) {
   // split a new node and insert it into the right pos.
   size_t left_size = split_node.node_size / 2, right_size = split_node.node_size - left_size;

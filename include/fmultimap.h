@@ -24,16 +24,17 @@ namespace StarryPurple {
 // degree for the maximum size of a node
 // node_size should be in [degree / 2 - 1, degree - 1]
 // no ValueType is directly used. we only reads and passes fpointer of ValueType.
-template<class KeyType, class ValueType, size_t degree = 1 << 7, size_t elementCount = cElementCount>
+template<class KeyType, class ValueType, size_t degree = 1 << 7, size_t capacity = cCapacity>
 class Fmultimap {
   struct InnerNode;
   struct VlistNode;
-  using InnerPtr = Fpointer<2 * elementCount / degree + 10>;
-  using VlistPtr = Fpointer<elementCount>;
-  using InnerFstream = Fstream<InnerNode, InnerPtr, 2 * elementCount / degree + 10>;
-  using VlistFstream = Fstream<VlistNode, VlistPtr, elementCount>;
+  using InnerPtr = Fpointer<2 * capacity / degree + 10>;
+  using VlistPtr = Fpointer<capacity>;
+  using InnerFstream = Fstream<InnerNode, InnerPtr, 2 * capacity / degree + 10>;
+  using VlistFstream = Fstream<VlistNode, VlistPtr, capacity>;
 private:
   struct InnerNode {
+    // todo: add this_ptr
     bool is_leaf = false;
     KeyType high_key;
     InnerPtr parent_ptr;
@@ -43,6 +44,7 @@ private:
     VlistPtr vlist_ptrs[degree + 1];
   };
   struct VlistNode {
+    // todo: add this_ptr
     ValueType value;
     VlistPtr nxt;
   };
@@ -50,6 +52,10 @@ private:
   VlistFstream vlist_fstream;
   bool is_open = false;
   InnerPtr root_ptr; // parent_ptr of root_node is "nullptr"
+  // stores the pointer of the visited empty begin vlistnode.
+  // doesn't mess around with inner nodes.
+  // todo: Cache doesn't support erasing pages. So if K-V erasing is to be implemented, please fix it.
+  LRUCache<KeyType, VlistPtr, (capacity >> 4)> vlist_begin_cache;
 public:
   Fmultimap() = default;
   ~Fmultimap();
@@ -61,7 +67,8 @@ public:
   std::vector<ValueType> operator[](const KeyType &key);
 
   // after splitting, split_node will become its parent node,
-  // split_ptr will become the pointer of the original split_node/
+  // split_ptr will become the pointer of the original split_node.
+  // Attention: the parent_ptr of split_node.inner_nodes won't be updated here.
   void split(
     const size_t split_pos,
      InnerPtr &split_ptr, InnerNode &split_node);

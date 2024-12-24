@@ -21,7 +21,7 @@ public:
   LRUCache() = default;
   ~LRUCache();
   void insert(const KeyType &key, const ValueType &value);
-  std::pair<ValueType, bool> find(const KeyType &key);
+  std::pair<ValueType, bool> find(const KeyType &key); // if found, automatically call an insert(key, value)
 };
 
 } // namespace StarryPurple

@@ -49,7 +49,9 @@ void LRUCache<KeyType, ValueType, capacity>::insert(const KeyType &key, const Va
 template<class KeyType, class ValueType, size_t capacity>
 std::pair<ValueType, bool> LRUCache<KeyType, ValueType, capacity>::find(const KeyType &key) {
   if(node_map.contains(key)) {
-    return {node_map[key]->value, true};
+    ValueType value = node_map[key]->value;
+    insert(key, value);
+    return {value, true};
   }
   return {ValueType(), false};
 }

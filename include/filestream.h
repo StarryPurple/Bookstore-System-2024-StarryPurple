@@ -18,9 +18,9 @@
  *        Store some extra information that may be needed. Exactly one InfoType object.
  * 1. Last recently used sign: size_t
  *        the last visited storage location.
- * 2. A bitmap for storage usage: bool [cElementCount]
+ * 2. A bitmap for storage usage: bool [cCapacity]
  *        A boolean sign is true if and only if correlated storage has been occupied.
- * 3. The storage body: StorageType [cElementCount]
+ * 3. The storage body: StorageType [cCapacity]
  *        Where these data are stored.
  *
  * The whole size of the file is determined since its creation by StorageType and cElementCount.
@@ -41,12 +41,12 @@ namespace StarryPurple {
 using offsetType = int;
 using filenameType = std::string;
 constexpr size_t cMaxFileSize = 1 << 22; // 32 MB
-constexpr size_t cElementCount = 1 << 14; // 16384, > 10000
+constexpr size_t cCapacity = 1 << 14; // 16384, > 10000
 
-template<class StorageType, class InfoType, size_t elementCount>
+template<class StorageType, class InfoType, size_t capacity>
 class Fstream;
 
-template<size_t elementCount>
+template<size_t capacity>
 class Fpointer {
 
 public:
@@ -64,10 +64,10 @@ public:
   bool operator==(const Fpointer &other) const;
   bool operator!=(const Fpointer &other) const;
 
-  offsetType offset_ = elementCount;
+  offsetType offset_ = capacity;
 };
 
-template<class StorageType, class InfoType = size_t, size_t elementCount = cElementCount>
+template<class StorageType, class InfoType = size_t, size_t capacity = cCapacity>
 class Fstream {
   // allow for sizeof(StorageType) at approximately cMaxFileSize / cElementCount = 1 << 7 = 128
   // smaller than 4KB ~ 4096
@@ -76,7 +76,7 @@ class Fstream {
 
 public:
 
-  using fpointer = Fpointer<elementCount>;
+  using fpointer = Fpointer<capacity>;
 
   Fstream() = default;
   ~Fstream();
@@ -107,11 +107,11 @@ public:
 private:
   const size_t cStorageSize = sizeof(StorageType);
   const size_t cExtraInfoSize = sizeof(InfoType);
-  const size_t cInfoSize = cExtraInfoSize + sizeof(size_t) + sizeof(bool) * elementCount;
-  const size_t cFileSize = cInfoSize + cStorageSize * elementCount;
+  const size_t cInfoSize = cExtraInfoSize + sizeof(size_t) + sizeof(bool) * capacity;
+  const size_t cFileSize = cInfoSize + cStorageSize * capacity;
   InfoType extra_info_;
   offsetType lru_loc_ = 0;
-  bool bitmap_[elementCount]{};
+  bool bitmap_[capacity]{};
   std::fstream file_{};
   filenameType filename_;
 

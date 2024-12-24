@@ -97,9 +97,11 @@ struct std::hash<KeyType> {
 };
 
 using ValueType = int;
-// sqrt(1e5) ~ 316.2
-// Oh I know. not all space reserved can be used without key space reallocate.
+// Oh, I know. not all space reserved can be used without key space reallocate.
+// for this B+Tree has at most 4 layers (log_(24)^(100000) = 3.62), set 2 ^ 3.62 ~ 12 times spare space may be better.
+// but that would be too large. I'd prefer 10.
 Fmultimap<KeyType, ValueType, 48, 100100 * 10> multimap;
+// sqrt(1e5) ~ 316.2
 // BlockList<KeyType, ValueType, 500> multimap;
 
 void insert(const KeyType &key, const ValueType value) {
