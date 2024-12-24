@@ -55,7 +55,7 @@ private:
   // stores the pointer of the visited empty begin vlistnode.
   // doesn't mess around with inner nodes.
   // todo: Cache doesn't support erasing pages. So if K-V erasing is to be implemented, please fix it.
-  LRUCache<KeyType, VlistPtr, (capacity >> 4)> vlist_begin_cache;
+  LRUCache<KeyType, VlistPtr, (capacity >> 8)> vlist_begin_cache;
 public:
   Fmultimap() = default;
   ~Fmultimap();
