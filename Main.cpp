@@ -98,7 +98,8 @@ struct std::hash<KeyType> {
 
 using ValueType = int;
 // sqrt(1e5) ~ 316.2
-Fmultimap<KeyType, ValueType, 40, 150100> multimap; // why more (1.5) space is needed?
+// Oh I know. not all space reserved can be used without key space reallocate.
+Fmultimap<KeyType, ValueType, 48, 100100 * 20> multimap;
 // BlockList<KeyType, ValueType, 500> multimap;
 
 void insert(const KeyType &key, const ValueType value) {
