@@ -147,8 +147,8 @@ int main() {
       erase(key, value);
     }
   }
-  // multimap.close();
-  fclose(stdin); fclose(stdout);
+  multimap.close();
+  // fclose(stdin); fclose(stdout);
   return 0;
 }
 /*
