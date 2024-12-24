@@ -109,7 +109,7 @@ void Fmultimap<KeyType, ValueType, degree, elementCount>::insert(
     maintain_size(pos_route, cur_inner_ptr, cur_inner_node);
     return;
   }
-  // assert(key == cur_inner_node.keys[pos])
+  // assert(key == cur_inner_node.keys[pos]);
   VlistPtr cur_vlist_ptr = cur_inner_node.vlist_ptrs[pos];
   VlistNode cur_vlist_node; vlist_fstream.read(cur_vlist_node, cur_vlist_ptr);
   VlistPtr nxt_vlist_ptr = cur_vlist_node.nxt;
@@ -268,7 +268,7 @@ void Fmultimap<KeyType, ValueType, degree, elementCount>::split(
   for(size_t i = 0; i < right_size; ++i) {
     right_node.keys[i] = split_node.keys[left_size + i];
     right_node.inner_ptrs[i] = split_node.inner_ptrs[left_size + i];
-    right_node.vlist_ptrs[i] = right_node.vlist_ptrs[left_size + i];
+    right_node.vlist_ptrs[i] = split_node.vlist_ptrs[left_size + i];
     split_node.keys[left_size + i] = empty_key;
     split_node.inner_ptrs[left_size + i].setnull();
     split_node.vlist_ptrs[left_size + i].setnull();
