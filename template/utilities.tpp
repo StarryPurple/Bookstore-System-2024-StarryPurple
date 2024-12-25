@@ -441,7 +441,7 @@ size_t StarryPurple::Fstack<Type, capacity>::size() const {
 }
 
 template<class Type, size_t capacity>
-const Type &StarryPurple::Fstack<Type, capacity>::back() const {
+Type &StarryPurple::Fstack<Type, capacity>::top() {
   if(empty())
     throw UtilityExceptions("Reading back of empty Fstack");
   return info.back_node.val;

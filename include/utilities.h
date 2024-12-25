@@ -105,7 +105,7 @@ public:
   void close();
   void push(const Type &value);
   void pop();
-  const Type &back() const;
+  Type &top();
   bool empty() const;
   size_t size() const;
 };
