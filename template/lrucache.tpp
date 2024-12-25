@@ -1,3 +1,5 @@
+#ifndef LRU_CACHE_TPP
+#define LRU_CACHE_TPP
 
 #include "lrucache.h"
 
@@ -54,3 +56,5 @@ std::pair<ValueType, bool> StarryPurple::LRUCache<KeyType, ValueType, capacity>:
   }
   return {ValueType(), false};
 }
+
+#endif // LRU_CACHE_TPP

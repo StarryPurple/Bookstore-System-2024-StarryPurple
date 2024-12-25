@@ -38,4 +38,6 @@ Validator<T> expect(const T &val);
 
 } // namespace StarryPurple
 
+#include "validator.tpp"
+
 #endif // VALIDATOR_H

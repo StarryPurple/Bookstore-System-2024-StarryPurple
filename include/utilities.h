@@ -1,6 +1,6 @@
 #pragma once
-#ifndef F_MULTIMAP_H
-#define F_MULTIMAP_H
+#ifndef UTILITIES_H
+#define UTILITIES_H
 
 #include "filestream.h"
 #include "lrucache.h"
@@ -17,9 +17,12 @@ namespace StarryPurple {
 template<class KeyType, class ValueType, size_t degree, size_t capacity>
 class Fmultimap {
   struct InnerNode;
+  struct VlistNode;
   using InnerPtr = Fpointer<2 * capacity / degree + 10>;
   using InnerFstream = Fstream<InnerNode, InnerPtr, 2 * capacity / degree + 10>;
   using KVPairType = std::pair<KeyType, ValueType>;
+  using VlistPtr = Fpointer<capacity>;
+  using VlistFstream = Fstream<VlistNode, size_t, capacity>;
 private:
   struct InnerNode {
     // todo: add this_ptr
@@ -31,15 +34,16 @@ private:
     KVPairType kv_pairs[degree + 1];
     InnerPtr inner_ptrs[degree + 1];
   };
-  /*
   struct VlistNode {
     // todo: add this_ptr
     ValueType value;
     VlistPtr nxt;
-  };*/
+  };
   InnerFstream inner_fstream;
+  VlistFstream vlist_fstream;
   bool is_open = false;
   InnerPtr root_ptr; // parent_ptr of root_node is "nullptr"
+  LRUCache<KeyType, VlistPtr, 20> vlist_begin_cache;
 public:
   Fmultimap() = default;
   ~Fmultimap();
@@ -108,4 +112,6 @@ public:
 
 } // namespace StarryPurple
 
-#endif // F_MULTIMAP_H
+#include "utilities.tpp"
+
+#endif // UTILITIES_H

@@ -1,4 +1,3 @@
-#pragma once
 #ifndef BLOCK_LIST_H
 #define BLOCK_LIST_H
 
@@ -62,5 +61,7 @@ public:
 };
 
 } // namespace StarryPurple
+
+#include "blocklist.tpp"
 
 #endif // BLOCK_LIST_H

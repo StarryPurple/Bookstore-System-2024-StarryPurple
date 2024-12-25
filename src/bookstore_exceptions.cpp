@@ -1,6 +1,5 @@
 #include "bookstore_exceptions.h"
 
-
 StarryPurple::FileExceptions::FileExceptions(const std::string& exception_info) {
   exception_info_ += exception_info;
 }

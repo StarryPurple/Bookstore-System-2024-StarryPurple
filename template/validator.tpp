@@ -1,13 +1,13 @@
-/** validator.cpp
- *
- */
+#ifndef VALIDATOR_TPP
+#define VALIDATOR_TPP
+
 #include "validator.h"
 
 #include <regex>
 
 
 template<class T>
-StarryPurple::Validator<T> expect(const T &val) {
+StarryPurple::Validator<T> StarryPurple::expect(const T &val) {
   return Validator<T>(val);
 }
 
@@ -96,4 +96,4 @@ StarryPurple::Validator<T>
   throw ValidatorException();
 }
 
-
+#endif // VALIDATOR_TPP

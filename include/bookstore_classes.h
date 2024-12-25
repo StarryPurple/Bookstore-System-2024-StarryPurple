@@ -1,4 +1,3 @@
-#pragma once
 #ifndef BOOKSTORE_CLASSES_H
 #define BOOKSTORE_CLASSES_H
 
@@ -95,5 +94,7 @@ class CommandManager {
 };
 
 } // namespace BookStore
+
+#include "bookstore_classes.tpp"
 
 #endif // BOOKSTORE_CLASSES_H

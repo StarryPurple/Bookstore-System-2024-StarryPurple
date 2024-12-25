@@ -1,4 +1,3 @@
-#pragma once
 #ifndef LRU_CACHE_H
 #define LRU_CACHE_H
 
@@ -25,5 +24,7 @@ public:
 };
 
 } // namespace StarryPurple
+
+#include "lrucache.tpp"
 
 #endif // LRU_CACHE_H

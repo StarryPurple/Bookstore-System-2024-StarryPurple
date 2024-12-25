@@ -7,12 +7,12 @@ set(CMAKE_CXX_STANDARD 20)
 
 include_directories(
         ${PROJECT_SOURCE_DIR}/include
-        ${PROJECT_SOURCE_DIR}/src
+        ${PROJECT_SOURCE_DIR}/template
 )
 
 file(GLOB src_list CONFIGURE_DEPENDS src/*.cpp)
 
 add_executable(code
-        Main.cpp
         ${src_list}
+        Main.cpp
 )

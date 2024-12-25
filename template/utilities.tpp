@@ -1,5 +1,7 @@
-#include "utilities.h"
+#ifndef UTILITIES_TPP
+#define UTILITIES_TPP
 
+#include "utilities.h"
 
 template<class KeyType, class ValueType, size_t degree, size_t capacity>
 StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::~Fmultimap() {
@@ -452,7 +454,9 @@ void StarryPurple::Fstack<Type, capacity>::pop() {
   --info.current_size;
   ListNodePtr del_ptr = info.back_ptr;
   info.back_ptr = info.back_node.pre;
-  stack_fstream.read(info.back_node, info.back_ptr);
+  if(info.current_size != 0)
+    stack_fstream.read(info.back_node, info.back_ptr);
+  else info.back_node.val = Type();
   stack_fstream.free(del_ptr);
 }
 
@@ -466,33 +470,4 @@ void StarryPurple::Fstack<Type, capacity>::push(const Type &value) {
   info.back_ptr = stack_fstream.allocate(info.back_node);
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#endif // UTILITIES_TPP

@@ -1,4 +1,3 @@
-#pragma once
 #ifndef HEADERS_H
 #define HEADERS_H
 
@@ -8,6 +7,5 @@
 #include "lrucache.h"
 #include "validator.h"
 #include "bookstore_classes.h"
-
 
 #endif // HEADERS_H

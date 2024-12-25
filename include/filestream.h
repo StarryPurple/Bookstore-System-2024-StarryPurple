@@ -26,7 +26,6 @@
  * The whole size of the file is determined since its creation by StorageType and cElementCount.
  * as we'll initialize it with empty StorageTypes.
  */
-#pragma once
 #ifndef FILE_STREAM_H
 #define FILE_STREAM_H
 
@@ -119,6 +118,6 @@ private:
 
 } // namespace StarryPurple
 
-
+#include "filestream.tpp"
 
 #endif // FILE_STREAM_H

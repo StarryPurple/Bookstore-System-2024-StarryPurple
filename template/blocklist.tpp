@@ -1,4 +1,5 @@
-
+#ifndef BLOCKLIST_TPP
+#define BLOCKLIST_TPP
 
 #include "blocklist.h"
 
@@ -490,3 +491,5 @@ void BlockList<KeyType, ValueType, degree>::average(
 }
 
 } // namespace StarryPurple
+
+#endif // BLOCKLIST_TPP

@@ -1,3 +1,6 @@
+#ifndef FILE_STREAM_TPP
+#define FILE_STREAM_TPP
+
 #include "filestream.h"
 
 using StarryPurple::FileExceptions;
@@ -205,3 +208,5 @@ void StarryPurple::Fstream<StorageType, InfoType, capacity>::write_info(const In
     throw FileExceptions("Writing on info while no file is open");
   extra_info_ = info;
 }
+
+#endif // FILE_STREAM_TPP
