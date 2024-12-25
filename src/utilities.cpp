@@ -1,24 +1,23 @@
-#include "fmultimap.h"
+#include "utilities.h"
 
-namespace StarryPurple {
 
 template<class KeyType, class ValueType, size_t degree, size_t capacity>
-Fmultimap<KeyType, ValueType, degree, capacity>::~Fmultimap() {
+StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::~Fmultimap() {
   if(is_open)
     close();
 }
 
 template<class KeyType, class ValueType, size_t degree, size_t capacity>
-void Fmultimap<KeyType, ValueType, degree, capacity>::open(
-  const filenameType &name_suffix) {
-  inner_fstream.open(name_suffix + "_inner.bsdat");
-  vlist_fstream.open(name_suffix + "_vlist.bsdat");
+void StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::open(
+  const filenameType &prefix) {
+  inner_fstream.open(prefix + "_inner.bsdat");
+  vlist_fstream.open(prefix + "_vlist.bsdat");
   is_open = true;
   inner_fstream.read_info(root_ptr);
 }
 
 template<class KeyType, class ValueType, size_t degree, size_t capacity>
-void Fmultimap<KeyType, ValueType, degree, capacity>::close() {
+void StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::close() {
   inner_fstream.write_info(root_ptr);
   inner_fstream.close();
   vlist_fstream.close();
@@ -26,7 +25,7 @@ void Fmultimap<KeyType, ValueType, degree, capacity>::close() {
 }
 
 template<class KeyType, class ValueType, size_t degree, size_t capacity>
-void Fmultimap<KeyType, ValueType, degree, capacity>::insert(
+void StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::insert(
   const KeyType &key, const ValueType &value) {
   if(root_ptr.isnull()) {
     VlistNode vlist_node;
@@ -173,7 +172,7 @@ void Fmultimap<KeyType, ValueType, degree, capacity>::insert(
 }
 
 template<class KeyType, class ValueType, size_t degree, size_t capacity>
-void Fmultimap<KeyType, ValueType, degree, capacity>::erase(
+void StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::erase(
   const KeyType &key, const ValueType &value) {
   if(root_ptr.isnull()) return;
   if(auto [cur_vlist_ptr, is_succeed] = vlist_begin_cache.find(key); is_succeed) {
@@ -266,7 +265,7 @@ void Fmultimap<KeyType, ValueType, degree, capacity>::erase(
 }
 
 template<class KeyType, class ValueType, size_t degree, size_t capacity>
-std::vector<ValueType> Fmultimap<KeyType, ValueType, degree, capacity>::operator[](
+std::vector<ValueType> StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::operator[](
   const KeyType &key) {
   std::vector<ValueType> res;
   if(root_ptr.isnull()) return res;
@@ -325,7 +324,7 @@ std::vector<ValueType> Fmultimap<KeyType, ValueType, degree, capacity>::operator
 }
 
 template<class KeyType, class ValueType, size_t degree, size_t capacity>
-void Fmultimap<KeyType, ValueType, degree, capacity>::maintain_size(
+void StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::maintain_size(
   InnerPtr &maintain_ptr, InnerNode &maintain_node) {
   while(true) {
     if(maintain_node.node_size >= degree + 1) { // node_size upper limit
@@ -363,7 +362,7 @@ void Fmultimap<KeyType, ValueType, degree, capacity>::maintain_size(
 }
 
 template<class KeyType, class ValueType, size_t degree, size_t capacity>
-void Fmultimap<KeyType, ValueType, degree, capacity>::split(
+void StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::split(
   const size_t split_pos, InnerPtr &split_ptr, InnerNode &split_node) {
   // split a new node and insert it into the right pos.
   size_t left_size = split_node.node_size / 2, right_size = split_node.node_size - left_size;
@@ -404,6 +403,96 @@ void Fmultimap<KeyType, ValueType, degree, capacity>::split(
   split_ptr = split_node.parent_ptr; split_node = parent_node;
 }
 
+template<class Type, size_t capacity>
+StarryPurple::Fstack<Type, capacity>::~Fstack() {
+  if(is_open)
+    close();
+}
+
+template<class Type, size_t capacity>
+void StarryPurple::Fstack<Type, capacity>::open(const filenameType &prefix) {
+  is_open = true;
+  bool file_exist = stack_fstream.open(prefix + "_stack.bsdat");
+  if(file_exist) {
+    stack_fstream.read_info(info);
+  } else {
+    info.current_size = 0;
+    info.back_ptr.setnull();
+  }
+}
+
+template<class Type, size_t capacity>
+void StarryPurple::Fstack<Type, capacity>::close() {
+  is_open = false;
+  stack_fstream.write_info(info);
+  stack_fstream.close();
+}
+
+template<class Type, size_t capacity>
+bool StarryPurple::Fstack<Type, capacity>::empty() const {
+  return info.current_size == 0;
+}
+
+template<class Type, size_t capacity>
+size_t StarryPurple::Fstack<Type, capacity>::size() const {
+  return info.current_size;
+}
+
+template<class Type, size_t capacity>
+const Type &StarryPurple::Fstack<Type, capacity>::back() const {
+  if(empty())
+    throw UtilityExceptions("Reading back of empty Fstack");
+  return info.back_node.val;
+}
+
+template<class Type, size_t capacity>
+void StarryPurple::Fstack<Type, capacity>::pop() {
+  if(empty())
+    throw UtilityExceptions("Poping back of empty Fstack");
+  --info.current_size;
+  ListNodePtr del_ptr = info.back_ptr;
+  info.back_ptr = info.back_node.pre;
+  stack_fstream.read(info.back_node, info.back_ptr);
+  stack_fstream.free(del_ptr);
+}
+
+template<class Type, size_t capacity>
+void StarryPurple::Fstack<Type, capacity>::push(const Type &value) {
+  if(!empty())
+    stack_fstream.write(info.back_node, info.back_ptr);
+  ++info.current_size;
+  info.back_node.pre = info.back_ptr;
+  info.back_node.val = value;
+  info.back_ptr = stack_fstream.allocate(info.back_node);
+}
 
 
-} // namespace StarryPurple
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

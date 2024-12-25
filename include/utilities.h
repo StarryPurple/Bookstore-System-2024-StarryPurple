@@ -1,20 +1,10 @@
-/** fmultimap.h
- * Author: StarryPurple
- * Date: Since 2024.12.17
- *
- * Includes some useful data structures;
- *
- * fmultimap / B Plus Tree:
- *   A (concurrency-friendly) data structure widely used in file io.
- *   supports basic functions of a key-value map similar to std::multimap, but with file storage.
- */
-
 #pragma once
 #ifndef F_MULTIMAP_H
 #define F_MULTIMAP_H
 
 #include "filestream.h"
 #include "lrucache.h"
+#include "bookstore_exceptions.h"
 
 #include <vector>
 #include <utility>
@@ -24,7 +14,7 @@ namespace StarryPurple {
 // degree for the maximum size of a node
 // node_size should be in [degree / 2 - 1, degree - 1]
 // no ValueType is directly used. we only reads and passes fpointer of ValueType.
-template<class KeyType, class ValueType, size_t degree = 1 << 7, size_t capacity = cCapacity>
+template<class KeyType, class ValueType, size_t degree, size_t capacity>
 class Fmultimap {
   struct InnerNode;
   struct VlistNode;
@@ -59,7 +49,7 @@ private:
 public:
   Fmultimap() = default;
   ~Fmultimap();
-  void open(const filenameType &name_suffix);
+  void open(const filenameType &prefix);
   void close();
 
   void insert(const KeyType &key, const ValueType &value);
@@ -91,6 +81,35 @@ public:
   void maintain_size(
     InnerPtr &maintain_ptr, InnerNode &maintain_node);
 
+};
+
+template<class Type, size_t capacity>
+class Fstack {
+  using ListNodePtr = Fpointer<capacity>;
+  struct ListNodeType {
+    Type val;
+    ListNodePtr pre;
+  };
+  struct InfoType {
+    ListNodeType back_node;
+    ListNodePtr back_ptr;
+    size_t current_size = 0;
+  };
+  using StackFstream = Fstream<ListNodeType, InfoType, capacity>;
+private:
+  StackFstream stack_fstream;
+  bool is_open = false;
+  InfoType info;
+public:
+  Fstack() = default;
+  ~Fstack();
+  void open(const filenameType &prefix);
+  void close();
+  void push(const Type &value);
+  void pop();
+  const Type &back() const;
+  bool empty() const;
+  size_t size() const;
 };
 
 } // namespace StarryPurple

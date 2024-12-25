@@ -1,10 +1,3 @@
-/** BookstoreExceptions.h
- * Author: StarryPurple
- * Date: Since 2024.12.16
- *
- * The exceptions that may be used in the bookstore system.
- */
-
 #pragma once
 #ifndef BOOKSTORE_EXCEPTIONS_H
 #define BOOKSTORE_EXCEPTIONS_H
@@ -26,16 +19,20 @@ private:
   std::string exception_info_ = "File error: ";
 };
 
-class BLinkTreeExceptions: std::exception {
+class UtilityExceptions: std::exception {
 
 public:
-  BLinkTreeExceptions() = delete;
-  BLinkTreeExceptions(const std::string& exception_info);
-  ~BLinkTreeExceptions() = default;
+  UtilityExceptions() = delete;
+  UtilityExceptions(const std::string& exception_info);
+  ~UtilityExceptions() = default;
   const char *what() const noexcept override;
 
 private:
-  std::string exception_info_ = "B-link tree error: ";
+  std::string exception_info_ = "Utility error: ";
+};
+
+class ValidatorException: std::exception {
+  const char *what() const noexcept override;
 };
 
 } // namespace StarryPurple

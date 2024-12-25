@@ -1,9 +1,8 @@
 
 #include "lrucache.h"
 
-namespace StarryPurple {
 template<class KeyType, class ValueType, size_t capacity>
-LRUCache<KeyType, ValueType, capacity>::~LRUCache() {
+StarryPurple::LRUCache<KeyType, ValueType, capacity>::~LRUCache() {
   for(ListType *cur = begin, *del; cur != nullptr;) {
     del = cur;
     cur = cur->nxt;
@@ -12,7 +11,7 @@ LRUCache<KeyType, ValueType, capacity>::~LRUCache() {
 }
 
 template<class KeyType, class ValueType, size_t capacity>
-void LRUCache<KeyType, ValueType, capacity>::insert(const KeyType &key, const ValueType &value) {
+void StarryPurple::LRUCache<KeyType, ValueType, capacity>::insert(const KeyType &key, const ValueType &value) {
   if(page_count == 0) {
     page_count = 1;
     begin = end = new ListType(key, value, nullptr, nullptr);
@@ -47,7 +46,7 @@ void LRUCache<KeyType, ValueType, capacity>::insert(const KeyType &key, const Va
 }
 
 template<class KeyType, class ValueType, size_t capacity>
-std::pair<ValueType, bool> LRUCache<KeyType, ValueType, capacity>::find(const KeyType &key) {
+std::pair<ValueType, bool> StarryPurple::LRUCache<KeyType, ValueType, capacity>::find(const KeyType &key) {
   if(node_map.contains(key)) {
     ValueType value = node_map[key]->value;
     insert(key, value);
@@ -55,4 +54,3 @@ std::pair<ValueType, bool> LRUCache<KeyType, ValueType, capacity>::find(const Ke
   }
   return {ValueType(), false};
 }
-} // namespace StarryPurple

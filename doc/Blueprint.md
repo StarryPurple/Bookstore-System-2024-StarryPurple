@@ -123,7 +123,7 @@ public:
     void modify_book(const ISBNType &ISBN);
     void modify_book(const bookInfoType &info, char kwd_type);
     void import_book(const ISBNType &ISBN, int quantity);
-    
+
     void show_finance(int count);
     void report_finance();
     void report_employee();

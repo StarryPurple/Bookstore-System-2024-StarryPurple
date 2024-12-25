@@ -30,7 +30,7 @@
 #ifndef FILE_STREAM_H
 #define FILE_STREAM_H
 
-#include "BookstoreExceptions.h"
+#include "bookstore_exceptions.h"
 
 #include <fstream>
 #include <cassert>
@@ -82,8 +82,8 @@ public:
   ~Fstream();
 
   // open a file.
-  // attention: filename should end with extension ".bsdat"
-  void open(const filenameType &filename);
+  // return whether the file exists before.
+  bool open(const filenameType &filename);
   // close the currently opened file.
   void close();
 
