@@ -6,6 +6,9 @@
 #include "utilities.h"
 #include "lrucache.h"
 #include "validator.h"
-#include "bookstore_classes.h"
+#include "infotypes.h"
+#include "info_database.h"
+#include "info_manager.h"
+#include "command_manager.h"
 
 #endif // HEADERS_H

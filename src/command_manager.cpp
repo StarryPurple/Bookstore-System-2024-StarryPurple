@@ -1,6 +1,9 @@
-#include "bookstore_classes.h"
+#include "command_manager.h"
 
-#include <complex>
+#include <vector>
+#include <iostream>
+
+using StarryPurple::expect;
 
 void BookStore::CommandManager::command_login(const ArglistType &argv) {
   // "su [UserID] ([Password])?"
@@ -198,11 +201,18 @@ void BookStore::CommandManager::command_show_report(const ArglistType &argv) {
 void BookStore::CommandManager::open(const filenameType &prefix) {
   if(is_running)
     close();
-  
+  user_manager.open(prefix + "_user");
+  book_manager.open(prefix + "_book");
+  log_manager.open(prefix + "_log");
+  is_running = true;
 }
 
 void BookStore::CommandManager::close() {
   if(!is_running) return;
+  user_manager.close();
+  book_manager.close();
+  log_manager.close();
+  is_running = false;
 }
 
 BookStore::CommandManager::~CommandManager() {

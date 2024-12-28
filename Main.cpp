@@ -1,14 +1,12 @@
 #include <iostream>
 #include <cstring>
-#include "headers.h"
+// #include "headers.h"
+#include "command_manager.h"
 
 int main() {
-  std::string str = "-author=\"Jane Eyre\"";
-  std::regex author_regex{"^-author=\"([\\x20-\\x7E]+)\"$"};
-  std::smatch match;
-  if(std::regex_search(str, match, author_regex)) {
-    std::cout << match.size() << std::endl;
-    std::cout << match[1] << std::endl;
-  } else std::cout << "Nod founda" << std::endl;
+  // freopen("input.txt", "r", stdin); freopen("output.txt", "w", stdout);
+  BookStore::CommandManager command_manager;
+  command_manager.command_list_reader();
+  // fclose(stdin); fclose(stdout);
   return 0;
 }

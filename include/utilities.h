@@ -4,7 +4,7 @@
 
 #include "filestream.h"
 #include "lrucache.h"
-#include "bookstore_exceptions.h"
+#include "validator.h"
 
 #include <vector>
 #include <utility>
@@ -110,7 +110,23 @@ public:
   size_t size() const;
 };
 
+template<int capacity>
+class ConstStr {
+private:
+  char storage[capacity + 1];
+  size_t len;
+public:
+  ConstStr();
+  ~ConstStr() = default;
+  ConstStr(const std::string &str);
+  ConstStr(const ConstStr &other);
+  bool operator==(const ConstStr &other) const;
+  bool operator!=(const ConstStr &other) const;
+  bool empty() const;
+};
+
 } // namespace StarryPurple
+
 
 #include "utilities.tpp"
 
