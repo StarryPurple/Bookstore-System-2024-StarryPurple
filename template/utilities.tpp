@@ -3,6 +3,7 @@
 
 #include "utilities.h"
 
+
 template<class KeyType, class ValueType, size_t degree, size_t capacity>
 StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::~Fmultimap() {
   if(is_open)
@@ -405,6 +406,14 @@ void StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::split(
   split_ptr = split_node.parent_ptr; split_node = parent_node;
 }
 
+
+
+template<class Type, size_t capacity>
+StarryPurple::Fstack<Type, capacity>::InfoType::InfoType() {
+
+}
+
+
 template<class Type, size_t capacity>
 StarryPurple::Fstack<Type, capacity>::~Fstack() {
   if(is_open)
@@ -412,9 +421,9 @@ StarryPurple::Fstack<Type, capacity>::~Fstack() {
 }
 
 template<class Type, size_t capacity>
-void StarryPurple::Fstack<Type, capacity>::open(const filenameType &prefix) {
+void StarryPurple::Fstack<Type, capacity>::open(const filenameType &filename) {
   is_open = true;
-  bool file_exist = stack_fstream.open(prefix + "_stack.bsdat");
+  bool file_exist = stack_fstream.open(filename);
   if(file_exist) {
     stack_fstream.read_info(info);
   } else {
@@ -491,6 +500,11 @@ StarryPurple::ConstStr<capacity>::ConstStr(const ConstStr &other) {
 }
 
 template<int capacity>
+std::string StarryPurple::ConstStr<capacity>::to_str() {
+  return std::string(storage);
+}
+
+template<int capacity>
 bool StarryPurple::ConstStr<capacity>::operator==(const ConstStr &other) const {
   if(len != other.len)
     return false;
@@ -506,8 +520,42 @@ bool StarryPurple::ConstStr<capacity>::operator!=(const ConstStr &other) const {
 }
 
 template<int capacity>
+bool StarryPurple::ConstStr<capacity>::operator<(const ConstStr &other) const {
+  for(int i = 0; i < std::min(len, other.len); ++i) {
+    if(storage[i] != other.storage[i])
+      return storage[i] < other.storage[i];
+  }
+  return len < other.len;
+}
+
+template<int capacity>
+bool StarryPurple::ConstStr<capacity>::operator>(const ConstStr &other) const {
+  return other < *this;
+}
+
+template<int capacity>
+bool StarryPurple::ConstStr<capacity>::operator<=(const ConstStr &other) const {
+  return !(other < *this);
+}
+
+template<int capacity>
+bool StarryPurple::ConstStr<capacity>::operator>=(const ConstStr &other) const {
+  return !(*this < other);
+}
+
+template<int capacity>
 bool StarryPurple::ConstStr<capacity>::empty() const {
   return len == 0;
+}
+
+template<int capacity>
+int StarryPurple::ConstStr<capacity>::length() const {
+  return len;
+}
+
+template<int capacity>
+const char StarryPurple::ConstStr<capacity>::operator[](int index) const {
+  return storage[index];
 }
 
 #endif // UTILITIES_TPP

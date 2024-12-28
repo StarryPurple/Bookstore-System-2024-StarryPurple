@@ -25,18 +25,18 @@ private:
   bool is_running = false;
   void open(const filenameType &prefix);
   void close();
-  void login(const UserInfoType &userID, const UserInfoType &password); // command "su [userID] [password]"
+  void login(const UserInfoType &userID, const PasswordType &password); // command "su [userID] [password]"
   void login(const UserInfoType &userID); // command "su [userID]"
-  void user_register(const UserType &user); // command "register", "useradd"
+  void user_register(const UserType &user); // command "register"
+  void user_add(const UserType &user); // command "useradd"
   void change_password(
     const UserInfoType &userID,
-    const UserInfoType &cur_pwd, const UserInfoType &new_pwd); // command "pwd [userID] [currentPassword] [newPassword]"
+    const PasswordType &cur_pwd, const PasswordType &new_pwd); // command "pwd [userID] [currentPassword] [newPassword]"
   void change_password(
     const UserInfoType &userID,
-    const UserInfoType &new_pwd); // command "pwd [userID] [newPassword]"
+    const PasswordType &new_pwd); // command "pwd [userID] [newPassword]"
   void logout(); // command "logout"
   void user_unregister(const UserInfoType &userID); // command "delete"
-  bool is_userid_occupied(const UserInfoType &userID);
 public:
   UserManager() = default;
   ~UserManager();
@@ -44,44 +44,47 @@ public:
 
 // book information database is managed here.
 class BookManager {
-  friend UserManager; // book database is needed in "select"
   friend CommandManager;
 private:
   BookDatabase book_database;
+  UserStack *user_stack_ptr;
   bool is_running = false;
   void open(const filenameType &prefix);
   void close();
-  void select_book(const ISBNType &ISBN); // command "select"
+  void select_book(const ISBNType &ISBN, LoggedUsrType &active_user); // command "select"
   void list_all(); // command "show" with no augments
   void list_ISBN(const ISBNType &ISBN); // command "show -ISBN=[ISBN]"
   void list_bookname(const BookInfoType &bookname); // command "show -name="[bookname]""
   void list_author(const BookInfoType &author); // command "show -author="[author]""
   void list_keyword(const BookInfoType &keyword); // command "show -keyword="[keyword]""
-  void restock(const QuantityType &quantity, const PriceType &total_cost); // command "import"
+  void restock(const QuantityType &quantity, const PriceType &total_cost, ); // command "import"
   void sellout(const ISBNType &ISBN, const QuantityType &quantity); // command "buy"
   // command "modify"
   // whether other augments are given is determined by whether it's an empty ConstString.
   void modify_book(
     const ISBNType &ISBN, const BookInfoType &bookname, const BookInfoType &author,
-    const BookInfoType &keyword_list, const PriceType &price, bool is_price_given);
+    const BookInfoType &keyword_list, const PriceType &price, bool is_modified[5]);
 public:
   BookManager() = default;
   ~BookManager();
 };
 
 class LogManager {
+  friend UserManager; // for log_add
+  friend BookManager; // for log_add
   friend CommandManager;
 private:
   LogDatabase log_database;
+  UserStack *user_stack_ptr;
   bool is_running = false;
   void open(const filenameType &prefix);
   void close();
+
   void show_deal_history(const LogCountType &count); // command "show finance [count]"
   void show_deal_history(); // special command "show finance"
-  // TODO: Implement them later.
-  void report_finance_history(); // special command "report finance"
-  void report_employee_working_history(); // special command "report employee"
-  void report_system_history(); // special command "log"
+  void report_finance(); // special command "report finance"
+  void report_employee(); // special command "report employee"
+  void report_history(); // special command "log"
 public:
   LogManager() = default;
   ~LogManager();

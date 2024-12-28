@@ -38,11 +38,11 @@ void StarryPurple::LRUCache<KeyType, ValueType, capacity>::insert(const KeyType 
   node_map.insert({key, end});
   if(page_count > capacity) {
     ListType *del = begin;
-    KeyType key = begin->key;
+    KeyType del_key = begin->key;
     begin = begin->nxt;
     begin->prev = nullptr;
     delete del;
-    node_map.erase(key);
+    node_map.erase(del_key);
     --page_count;
   }
 }

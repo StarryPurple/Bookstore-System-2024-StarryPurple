@@ -14,25 +14,26 @@ namespace StarryPurple {
 // degree for the maximum size of a node
 // node_size should be in [degree / 2 - 1, degree - 1]
 // no ValueType is directly used. we only reads and passes fpointer of ValueType.
+// Note: KeyType should have <, >, ==, <=, >=, != (maybe std::hash?)
+//       ValueType should have <, >, ==, <=, >=, !=
 template<class KeyType, class ValueType, size_t degree, size_t capacity>
 class Fmultimap {
   struct InnerNode;
   struct VlistNode;
   using InnerPtr = Fpointer<2 * capacity / degree + 10>;
   using InnerFstream = Fstream<InnerNode, InnerPtr, 2 * capacity / degree + 10>;
-  using KVPairType = std::pair<KeyType, ValueType>;
   using VlistPtr = Fpointer<capacity>;
   using VlistFstream = Fstream<VlistNode, size_t, capacity>;
 private:
   struct InnerNode {
     // todo: add this_ptr
     bool is_leaf = false;
-    InnerPtr link_ptr;
-    KVPairType high_kv;
-    InnerPtr parent_ptr;
+    InnerPtr link_ptr{};
+    KeyType high_key{};
+    InnerPtr parent_ptr{};
     size_t node_size = 0;
-    KVPairType kv_pairs[degree + 1];
-    InnerPtr inner_ptrs[degree + 1];
+    KeyType keys[degree + 1]{};
+    InnerPtr inner_ptrs[degree + 1]{};
   };
   struct VlistNode {
     // todo: add this_ptr
@@ -89,9 +90,10 @@ class Fstack {
     ListNodePtr pre;
   };
   struct InfoType {
-    ListNodeType back_node;
-    ListNodePtr back_ptr;
+    ListNodeType back_node{};
+    ListNodePtr back_ptr{};
     size_t current_size = 0;
+    InfoType();
   };
   using StackFstream = Fstream<ListNodeType, InfoType, capacity>;
 private:
@@ -101,7 +103,7 @@ private:
 public:
   Fstack() = default;
   ~Fstack();
-  void open(const filenameType &prefix);
+  void open(const filenameType &filename);
   void close();
   void push(const Type &value);
   void pop();
@@ -114,15 +116,22 @@ template<int capacity>
 class ConstStr {
 private:
   char storage[capacity + 1];
-  size_t len;
+  int len;
 public:
   ConstStr();
   ~ConstStr() = default;
   ConstStr(const std::string &str);
   ConstStr(const ConstStr &other);
+  std::string to_str();
   bool operator==(const ConstStr &other) const;
   bool operator!=(const ConstStr &other) const;
+  bool operator<(const ConstStr &other) const;
+  bool operator>(const ConstStr &other) const;
+  bool operator<=(const ConstStr &other) const;
+  bool operator>=(const ConstStr &other) const;
   bool empty() const;
+  int length() const;
+  const char operator[](int index) const;
 };
 
 } // namespace StarryPurple

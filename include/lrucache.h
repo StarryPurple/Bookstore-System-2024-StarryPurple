@@ -1,10 +1,13 @@
 #ifndef LRU_CACHE_H
 #define LRU_CACHE_H
 
-#include <unordered_map>
+#include <map>
 #include <utility>
 
 namespace StarryPurple {
+
+// todo: change std::map to std::unordered_map
+//       std::hash(KeyType) is to be required.
 template<class KeyType, class ValueType, size_t capacity>
 class LRUCache {
   struct ListType {
@@ -12,7 +15,7 @@ class LRUCache {
     ValueType value;
     ListType *prev, *nxt;
   };
-  std::unordered_map<KeyType, ListType *> node_map;
+  std::map<KeyType, ListType *> node_map;
   size_t page_count = 0;
   ListType *begin = nullptr, *end = nullptr;
   // filled begin, filled end

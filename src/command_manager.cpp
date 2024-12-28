@@ -31,7 +31,7 @@ void BookStore::CommandManager::command_user_register(const ArglistType &argv) {
   expect(argv[3]).toBeConsistedOf(ascii_alphabet);
   user_manager.user_register(
     UserType(
-      UserInfoType(argv[1]), UserInfoType(argv[2]),
+      UserInfoType(argv[1]), PasswordType(argv[2]),
       1, UserInfoType(argv[3])));
 }
 
@@ -43,11 +43,11 @@ void BookStore::CommandManager::command_change_password(const ArglistType &argv)
     expect(argv[2]).toBeConsistedOf(digit_alpha_underline_alphabet);
     expect(argv[3]).toBeConsistedOf(digit_alpha_underline_alphabet);
     user_manager.change_password(
-      UserInfoType(argv[1]), UserInfoType(argv[2]), UserInfoType(argv[3]));
+      UserInfoType(argv[1]), PasswordType(argv[2]), PasswordType(argv[3]));
   } else {
     expect(argv[2]).toBeConsistedOf(digit_alpha_underline_alphabet);
     user_manager.change_password(
-      UserInfoType(argv[1]), UserInfoType(argv[2]));
+      UserInfoType(argv[1]), PasswordType(argv[2]));
   }
 }
 
@@ -60,9 +60,9 @@ void BookStore::CommandManager::command_user_add(const ArglistType &argv) {
   expect(argv[4]).toBeConsistedOf(ascii_alphabet);
   int pri = std::stoi(argv[3]);
   expect(pri).toBeOneOf(1, 3, 7);
-  user_manager.user_register(
+  user_manager.user_add(
     UserType(
-      UserInfoType(argv[1]), UserInfoType(argv[2]),
+      UserInfoType(argv[1]), PasswordType(argv[2]),
       pri, UserInfoType(argv[4])));
 }
 
@@ -131,45 +131,47 @@ void BookStore::CommandManager::command_select_book(const ArglistType &argv) {
 void BookStore::CommandManager::command_modify_book(const ArglistType &argv) {
   // "modify (-ISBN=[ISBN] | -name="[BookName]" | -author="[Author]" | -keyword="[Keyword]" | -price=[Price])+"
   expect(argv.size()).toBeOneOf(2, 3, 4, 5, 6);
-  std::string ISBN, bookname, author, keyword_list, price_str;
+  std::string ISBN, bookname, author, keyword_list;
+  PriceType price = 0;
+  bool is_modified[5] = {false, false, false, false, false};
   for(size_t i = 1; i < argv.size(); ++i) {
     std::smatch match;
     if(std::regex_search(argv[i], match, ISBN_aug_regex)) {
-      if(!ISBN.empty())
+      if(is_modified[0])
         throw StarryPurple::ValidatorException();
       ISBN = match[1];
       expect(ISBN).toBeConsistedOf(ascii_alphabet);
+      is_modified[0] = true;
     } else if(std::regex_search(argv[i], match, bookname_aug_regex)) {
-      if(!bookname.empty())
+      if(is_modified[1])
         throw StarryPurple::ValidatorException();
       bookname = match[1];
       expect(bookname).toBeConsistedOf(ascii_no_quotaton_alphabet);
+      is_modified[1] = true;
     } else if(std::regex_search(argv[i], match, author_aug_regex)) {
-      if(!author.empty())
+      if(is_modified[2])
         throw StarryPurple::ValidatorException();
       author = match[1];
       expect(author).toBeConsistedOf(ascii_no_quotaton_alphabet);
+      is_modified[2] = true;
     } else if(std::regex_search(argv[i], match, keyword_aug_regex)) {
-      if(!keyword_list.empty())
+      if(is_modified[3])
         throw StarryPurple::ValidatorException();
       keyword_list = match[1];
       expect(keyword_list).toBeConsistedOf(ascii_no_quotaton_alphabet);
+      is_modified[3] = true;
     } else if(std::regex_search(argv[i], match, price_aug_regex)) {
-      if(!price_str.empty())
+      if(is_modified[4])
         throw StarryPurple::ValidatorException();
-      price_str = match[1];
+      std::string price_str = match[1];
       expect(price_str).toBeConsistedOf(digit_with_dot_alphabet);
+      price = std::stod(price_str);
+      is_modified[4] = true;
     } else throw StarryPurple::ValidatorException();
-  }
-  PriceType price = 0;
-  bool is_price_given = false;
-  if(!price_str.empty()) {
-    price = std::stod(price_str);
-    is_price_given = true;
   }
   book_manager.modify_book(
     ISBNType(ISBN), BookInfoType(bookname), BookInfoType(author),
-    BookInfoType(keyword_list), price, is_price_given);
+    BookInfoType(keyword_list), price, is_modified);
 }
 
 void BookStore::CommandManager::command_restock(const ArglistType &argv) {
@@ -199,12 +201,14 @@ void BookStore::CommandManager::command_show_report(const ArglistType &argv) {
 }
 
 void BookStore::CommandManager::open(const filenameType &prefix) {
-  if(is_running)
-    close();
+  if(is_running) close();
   user_manager.open(prefix + "_user");
   book_manager.open(prefix + "_book");
   log_manager.open(prefix + "_log");
   is_running = true;
+
+  book_manager.user_stack_ptr = log_manager.user_stack_ptr = &user_manager.user_stack;
+
 }
 
 void BookStore::CommandManager::close() {
@@ -216,8 +220,7 @@ void BookStore::CommandManager::close() {
 }
 
 BookStore::CommandManager::~CommandManager() {
-  if(is_running)
-    close();
+  if(is_running) close();
 }
 
 
@@ -236,8 +239,8 @@ BookStore::CommandManager::command_splitter(const std::string &command) {
   return argv;
 }
 
-void BookStore::CommandManager::command_list_reader() {
-  open("Year2024");
+void BookStore::CommandManager::command_list_reader(const filenameType &prefix, const filenameType &directory) {
+  open(directory + prefix);
   std::string command;
   while(std::getline(std::cin, command)) {
     ArglistType argv = command_splitter(command);

@@ -46,6 +46,9 @@ private:
   BookManager book_manager;
   LogManager log_manager;
 
+  void open(const filenameType &prefix);
+  void close();
+
   ArglistType command_splitter(const std::string &command);
 
   // Only checks if command is grammatically correct.
@@ -69,9 +72,10 @@ private:
 public:
   CommandManager() = default;
   ~CommandManager();
-  void open(const filenameType &prefix);
-  void close();
-  void command_list_reader();
+  // @prefix shouldn't have '/' in it. It's just a prefix for all data files.
+  // @directory should end with '/', for example "./data/".
+  // if not assigned, directory = "./", means the data will be stored in you current directory.
+  void command_list_reader(const filenameType &prefix, const filenameType &directory = "./");
 };
 }
 

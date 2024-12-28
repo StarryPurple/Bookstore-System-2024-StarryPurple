@@ -1,9 +1,15 @@
 #ifndef INFO_TYPES_H
 #define INFO_TYPES_H
 
+#include <info_database.h>
+
 #include "utilities.h"
 
 namespace BookStore {
+
+using StarryPurple::filenameType;
+using StarryPurple::ConstStr;
+using StarryPurple::expect;
 
 // friend classes
 
@@ -17,51 +23,47 @@ class LogManager;
 
 // new classes
 
-using StarryPurple::filenameType;
-using StarryPurple::ConstStr;
 
 class UserPrivilege;
 class UserType;
 class BookType;
-class FinanceLogType;
+class LogType;
 
 using LogCountType = int;
-constexpr LogCountType cMaxStorage = 100010;
+constexpr LogCountType cMaxFlowSize = 100010;
 using ISBNType = ConstStr<21>;
 using BookInfoType = ConstStr<61>;
 using UserInfoType = ConstStr<61>;
 using PasswordType = ConstStr<31>;
+using LogDescriptionType = ConstStr<501>;
 using PriceType = double;
 using QuantityType = long long;
-using UserPtr = StarryPurple::Fpointer<cMaxStorage + 1>;
-using BookPtr = StarryPurple::Fpointer<cMaxStorage + 2>;
 
 
 class UserPrivilege {
 private:
   const bool pri_1 = false, pri_2 = false, pri_3 = false;
 public:
-  UserPrivilege();
+  UserPrivilege() = default;
   explicit UserPrivilege(int privilege);
   UserPrivilege(const UserPrivilege &other);
   bool operator==(const UserPrivilege &other) const;
+  bool operator!=(const UserPrivilege &other) const;
   bool operator<=(const UserPrivilege &other) const;
   bool operator>=(const UserPrivilege &other) const;
-  bool operator!=(const UserPrivilege &other) const = delete;
-  bool operator<(const UserPrivilege &other) const = delete;
-  bool operator>(const UserPrivilege &other) const = delete;
 };
 
 class BookType {
   friend BookDatabase;
   friend BookManager; // needed?
 private:
-  ISBNType ISBN;
-  BookInfoType bookname, author, keyword_list;
-  PriceType price;
-  QuantityType storage;
+  ISBNType isbn{};
+  BookInfoType bookname{}, author{}, keyword_list{};
+  PriceType price = 0;
+  QuantityType storage = 0;
 public:
   BookType() = default;
+  BookType(const ISBNType &ISBN);
   ~BookType() = default;
 };
 
@@ -71,20 +73,29 @@ class UserType {
   friend UserDatabase;
   friend UserManager; // needed?
 private:
-  UserInfoType ID, username, password;
+  UserInfoType ID, username;
+  PasswordType passwd;
   const UserPrivilege privilege;
 public:
   UserType() = default;
-  ~UserType() = default;
   UserType(
-    const UserInfoType &userID, const UserInfoType &passwd,
-    int user_privilege, const UserInfoType &usrname);
+    const UserInfoType &userID, const PasswordType &password,
+    int user_privilege, const UserInfoType &name);
+  ~UserType() = default;
 };
 
 
-class FinanceLogType {
+class LogType {
+  friend LogManager; // used in "show finance"
+  friend LogDatabase;
 private:
-  PriceType income, expenditure;
+  PriceType total_income, total_expenditure;
+  LogDescriptionType log_description;
+public:
+  LogType() = default;
+  LogType(const PriceType &history_income, const PriceType &history_expenditure,
+  const LogDescriptionType &description);
+  ~LogType() = default;
 };
 
 } // namespace BookStore

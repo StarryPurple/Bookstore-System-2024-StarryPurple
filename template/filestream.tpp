@@ -42,10 +42,6 @@ bool StarryPurple::Fpointer<capacity>::operator!=(const Fpointer &other) const {
 
 
 
-
-
-
-
 template<class StorageType, class InfoType, size_t capacity>
 StarryPurple::Fstream<StorageType, InfoType, capacity>::~Fstream() {
   if(file_.is_open())
