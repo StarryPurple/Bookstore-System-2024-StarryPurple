@@ -3,10 +3,9 @@
 
 #include "infotypes.h"
 
-#include <unordered_set>
+#include <set>
 
 namespace BookStore {
-
 
 
 // friend classes
@@ -23,9 +22,6 @@ class UserDatabase;
 class BookDatabase;
 class LogDatabase;
 
-using UserPtr = typename StarryPurple::Fpointer<cMaxFlowSize + 1>; // accord to user database capacity
-using BookPtr = typename StarryPurple::Fpointer<cMaxFlowSize + 2>; // accord to book database capacity
-using LogPtr = typename StarryPurple::Fpointer<cMaxFlowSize + 3>; // accord to log database sapacity
 
 class LoggedUsrType {
   friend UserStack;
@@ -46,7 +42,7 @@ class UserStack {
 private:
   bool is_open = false;
   StarryPurple::Fstack<LoggedUsrType, cMaxFlowSize> u_stack;
-  std::unordered_set<UserInfoType> logged_set;
+  std::set<UserInfoType> logged_set;
   // The password infomation may be not right.
   LoggedUsrType &active_user();
   const UserPrivilege &active_privilege();

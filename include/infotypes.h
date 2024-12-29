@@ -1,7 +1,7 @@
 #ifndef INFO_TYPES_H
 #define INFO_TYPES_H
 
-#include <info_database.h>
+#include "info_database.h"
 
 #include "utilities.h"
 
@@ -40,6 +40,9 @@ using LogDescriptionType = ConstStr<501>;
 using PriceType = double;
 using QuantityType = long long;
 
+using UserPtr = StarryPurple::Fpointer<cMaxFlowSize + 1>; // accord to user database capacity
+using BookPtr = StarryPurple::Fpointer<cMaxFlowSize + 2>; // accord to book database capacity
+using LogPtr = StarryPurple::Fpointer<cMaxFlowSize + 3>; // accord to log database sapacity
 
 class UserPrivilege {
 private:
