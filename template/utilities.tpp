@@ -421,8 +421,8 @@ StarryPurple::ConstStr<capacity>::ConstStr() {
 
 template<int capacity>
 StarryPurple::ConstStr<capacity>::ConstStr(const std::string &str) {
-  expect(str.size()).lesserEqual(capacity);
-  len = str.size();
+  expect(str.length()).lesserEqual(capacity);
+  len = str.length();
   strcpy(storage, str.c_str()); // for '\0'
 }
 

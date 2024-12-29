@@ -28,12 +28,12 @@ class BookType;
 class LogType;
 
 using LogCountType = int;
-constexpr LogCountType cMaxFlowSize = 100010;
-using ISBNType = ConstStr<21>;
-using BookInfoType = ConstStr<61>;
-using UserInfoType = ConstStr<61>;
-using PasswordType = ConstStr<31>;
-using LogDescriptionType = ConstStr<501>;
+constexpr LogCountType cMaxFlowSize = 100100;
+using ISBNType = ConstStr<20>;
+using BookInfoType = ConstStr<60>;
+using UserInfoType = ConstStr<30>;
+using PasswordType = ConstStr<30>;
+using LogDescriptionType = ConstStr<500>;
 using PriceType = double;
 using QuantityType = long long;
 

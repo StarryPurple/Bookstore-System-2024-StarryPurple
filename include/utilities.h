@@ -116,7 +116,7 @@ public:
 template<int capacity>
 class ConstStr {
 private:
-  char storage[capacity + 1];
+  char storage[capacity + 2];
   int len;
 public:
   ConstStr();

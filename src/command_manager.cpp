@@ -291,13 +291,13 @@ void BookStore::CommandManager::command_list_reader(const std::string &prefix, c
       else throw StarryPurple::ValidatorException();
     } catch(StarryPurple::ValidatorException &) {
       std::cout << "Invalid\n";
-    } catch(StarryPurple::UtilityExceptions) {
+    } /*catch(StarryPurple::UtilityExceptions) {
       std::cout << "Hey!\n";
     } catch(StarryPurple::FileExceptions &) {
       std::cout << "What?\n";
     } catch(...) {
-      throw StarryPurple::ValidatorException();
-    }
+      std::cout << "Congratulations for a bug revealed!\n";
+    }*/
   }
   close();
 }
