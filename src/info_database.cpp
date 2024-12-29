@@ -177,8 +177,8 @@ void BookStore::BookDatabase::book_modify_info(
   if(!is_modified[3])
     modified_book.keyword_list = old_book.keyword_list;
   else {
-    std::vector<UserInfoType> keyword_vector = keyword_splitter(modified_book.keyword_list);
-    std::set<UserInfoType> keyword_set;
+    std::vector<BookInfoType> keyword_vector = keyword_splitter(modified_book.keyword_list);
+    std::set<BookInfoType> keyword_set;
     for(const auto &keyword: keyword_vector)
       keyword_set.insert(keyword);
     expect(keyword_set.size()).toBe(keyword_vector.size());
