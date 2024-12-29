@@ -289,8 +289,14 @@ void BookStore::CommandManager::command_list_reader(const std::string &prefix, c
       else if(argv[0] == "report")
         command_show_report(argv);
       else throw StarryPurple::ValidatorException();
-    } catch(...) {
+    } catch(StarryPurple::ValidatorException &) {
       std::cout << "Invalid\n";
+    } catch(StarryPurple::UtilityExceptions) {
+      std::cout << "Hey!\n";
+    } catch(StarryPurple::FileExceptions &) {
+      std::cout << "What?\n";
+    } catch(...) {
+      throw StarryPurple::ValidatorException();
     }
   }
   close();
