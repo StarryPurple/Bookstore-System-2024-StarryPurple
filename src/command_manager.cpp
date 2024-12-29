@@ -296,6 +296,7 @@ void BookStore::CommandManager::command_list_reader(const std::string &prefix, c
     } catch(FileExceptions &){
       int a[1]; a[120] = 1;
     } catch(...) {
+      int a[1]; a[120] = 1;
       std::cout << "You found a bug! Please report your operations to the developer.\n";
     }
   }
