@@ -23,7 +23,7 @@ void BookStore::UserStack::clear() {
   // u_stack.clear();
   // The data in std::vector will be automatically released and discarded.
   // but for the function of "clear", let's do some clearing.
-  u_stack.empty();
+  u_stack.clear();
   logged_set.clear();
 }
 
