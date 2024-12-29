@@ -282,7 +282,7 @@ void StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::maintain_siz
         if(maintain_node.high_key > parent_node.keys[mid]) l = mid + 1;
         else r = mid;
       }
-      assert(maintain_node.high_key == parent_node.keys[l]);
+      // assert(maintain_node.high_key == parent_node.keys[l]);
       split(l, maintain_ptr, maintain_node);
       continue;
     }

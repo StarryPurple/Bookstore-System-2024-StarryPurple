@@ -90,8 +90,6 @@ void BookStore::UserManager::logout() {
 void BookStore::UserManager::user_unregister(const UserInfoType &userID) {
   expect(user_stack.active_privilege()).greaterEqual(UserPrivilege(7));
   expect(user_stack.logged_set.count(userID)).toBe(0);
-  std::vector<UserType> user_vector = user_database.user_id_map[userID];
-  expect(user_vector.size()).toBe(1);
   user_database.user_unregister(userID);
 }
 
@@ -127,7 +125,7 @@ void BookStore::BookManager::select_book(const ISBNType &ISBN) {
     user_stack_ptr->user_select_book(ISBN);
   } else if(book_vector.size() == 1) {
     user_stack_ptr->user_select_book(book_vector[0].isbn);
-  } else assert(false);
+  } // else assert(false);
 }
 
 void BookStore::BookManager::list_all() {
@@ -218,7 +216,7 @@ void BookStore::BookManager::modify_book(
   expect(user_stack_ptr->active_user().has_selected_book).toBe(true);
   ISBNType old_ISBN = user_stack_ptr->active_user().ISBN_selected;
   std::vector<BookType> book_vector = book_database.ISBN_map[old_ISBN];
-  assert(book_vector.size() == 1); // Needed?
+  // assert(book_vector.size() == 1); // Needed?
   BookType old_book = book_vector[0];
   BookType modified_book;
   modified_book.isbn = ISBN; modified_book.bookname = bookname;

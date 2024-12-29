@@ -104,9 +104,8 @@ void BookStore::UserDatabase::user_register(const UserType &user) {
 }
 
 void BookStore::UserDatabase::user_unregister(const UserInfoType &userID) {
-  // todo: what if we unregister root?
   std::vector<UserType> user_list = user_id_map[userID];
-  assert(user_list.size() == 1);
+  expect(user_list.size()).toBe(1);
   UserType user = user_list[0];
   user_id_map.erase(userID, user);
 }

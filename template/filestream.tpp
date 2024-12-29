@@ -104,10 +104,8 @@ void StarryPurple::Fstream<StorageType, InfoType, capacity>::close() {
 template<class StorageType, class InfoType, size_t capacity>
 StarryPurple::Fpointer<capacity>
 StarryPurple::Fstream<StorageType, InfoType, capacity>::allocate() {
-  if(!file_.is_open()) {
-    assert(false);
+  if(!file_.is_open())
     throw FileExceptions("Allocating storage while no file is open");
-  }
   offsetType loc = lru_loc_;
   while(loc < capacity && bitmap_[loc]) loc++;
   if(loc != capacity)
@@ -117,10 +115,7 @@ StarryPurple::Fstream<StorageType, InfoType, capacity>::allocate() {
     while(loc < lru_loc_ && bitmap_[loc]) loc++;
     if(loc != capacity)
       lru_loc_ = loc;
-    else {
-      assert(false);
-      throw FileExceptions("Storage is full in file \"" + filename_ + "\"");
-    }
+    else throw FileExceptions("Storage is full in file \"" + filename_ + "\"");
   }
   StorageType placeholder{};
   fpointer ptr{lru_loc_};
