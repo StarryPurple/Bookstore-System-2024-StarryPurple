@@ -10,7 +10,7 @@ using StarryPurple::expect;
 
 // friend classes
 
-class LoggedUsrType;
+class LoggedUserType;
 class UserStack;
 class UserDatabase;
 class BookDatabase;
@@ -77,7 +77,7 @@ public:
 
 
 class UserType {
-  friend LoggedUsrType;
+  friend LoggedUserType;
   friend UserStack;
   friend UserDatabase;
   friend UserManager; // needed?

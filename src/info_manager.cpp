@@ -227,7 +227,11 @@ void BookStore::BookManager::modify_book(
   bool is_to_modify[6] =
     {is_modified[0], is_modified[1], is_modified[2], is_modified[3], is_modified[4], false};
   book_database.book_modify_info(old_book, modified_book, is_to_modify);
-  if(is_modified[0]) user_stack_ptr->active_user().ISBN_selected = ISBN;
+  if(is_modified[0]) {
+    // modify all old_isbn in the user_stack to new_isbn.
+    // modified_book here is a truthfully modified one, not with some uncertainties.
+    user_stack_ptr->update_ISBN(old_ISBN, modified_book.isbn);
+  }
 }
 
 

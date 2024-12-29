@@ -8,62 +8,71 @@ BookStore::UserStack::~UserStack() {
 
 void BookStore::UserStack::open(const std::string &prefix) {
   if(is_open) close();
-  u_stack.open(prefix + ".bsdat");
+  // u_stack.open(prefix + ".bsdat");
   is_open = true;
 }
 
 void BookStore::UserStack::close() {
   if(!is_open) return;
-  u_stack.close();
+  // u_stack.close();
+  // The data in std::vector will be automatically released and discarded.
   is_open = false;
 }
 
 void BookStore::UserStack::clear() {
-  u_stack.clear();
+  // u_stack.clear();
+  // The data in std::vector will be automatically released and discarded.
+  // but for the function of "clear", let's do some clearing.
+  u_stack.empty();
   logged_set.clear();
 }
 
-BookStore::LoggedUsrType::LoggedUsrType(const UserType &user)
+BookStore::LoggedUserType::LoggedUserType(const UserType &user)
   : user_id(user.ID), privilege(user.privilege) {}
 
 
 void BookStore::UserStack::user_login(const UserType &user) {
-  u_stack.push(LoggedUsrType(user));
+  u_stack.push_back(LoggedUserType(user));
   logged_set.insert(user.ID);
 }
 
 void BookStore::UserStack::user_logout() {
   if(u_stack.empty())
     throw StarryPurple::ValidatorException();
-  logged_set.erase(u_stack.top().user_id);
-  u_stack.pop();
+  logged_set.erase(u_stack.back().user_id);
+  u_stack.pop_back();
 }
 
 void BookStore::UserStack::user_select_book(const ISBNType &ISBN) {
   if(u_stack.empty())
     throw StarryPurple::ValidatorException();
-  u_stack.top().has_selected_book = true;
-  u_stack.top().ISBN_selected = ISBN;
+  u_stack.back().has_selected_book = true;
+  u_stack.back().ISBN_selected = ISBN;
 }
 
 bool BookStore::UserStack::empty() const {
   return u_stack.empty();
 }
 
-BookStore::LoggedUsrType
+BookStore::LoggedUserType
 &BookStore::UserStack::active_user() {
   if(u_stack.empty())
     throw StarryPurple::ValidatorException(); // needed?
-  return u_stack.top();
+  return u_stack.back();
 }
 
 const BookStore::UserPrivilege
 BookStore::UserStack::active_privilege() {
   if(u_stack.empty())
     return UserPrivilege(0);
-  return u_stack.top().privilege;
+  return u_stack.back().privilege;
 }
 
+void BookStore::UserStack::update_ISBN(const ISBNType &old_ISBN, const ISBNType &modified_ISBN) {
+  for(auto &logged_user: u_stack)
+    if(logged_user.has_selected_book && logged_user.ISBN_selected == old_ISBN)
+      logged_user.ISBN_selected = modified_ISBN;
+}
 
 
 

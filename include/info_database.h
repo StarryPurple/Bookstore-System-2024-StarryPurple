@@ -17,14 +17,14 @@ class LogManager;
 
 // new classes
 
-class LoggedUsrType;
+class LoggedUserType;
 class UserStack;
 class UserDatabase;
 class BookDatabase;
 class LogDatabase;
 
 
-class LoggedUsrType {
+class LoggedUserType {
   friend UserStack;
   friend BookManager;
 private:
@@ -33,20 +33,24 @@ private:
   ISBNType ISBN_selected{};
   bool has_selected_book = false;
 public:
-  LoggedUsrType() = default;
-  LoggedUsrType(const UserType &user);
+  LoggedUserType() = default;
+  LoggedUserType(const UserType &user);
 };
 
 class UserStack {
   friend UserManager; // for active user
   friend BookManager; // for active user
-  friend LogManager; // for actibe user, log commit
+  friend LogManager; // for active user, log commit
 private:
   bool is_open = false;
-  StarryPurple::Fstack<LoggedUsrType, cMaxFlowSize> u_stack;
+  // StarryPurple::Fstack<LoggedUsrType, cMaxFlowSize> u_stack;
+
+  // In fact, it's a std::vector.
+  // Uh, so that we don't need a file to store information.
+  std::vector<LoggedUserType> u_stack;
   std::set<UserInfoType> logged_set;
   // The password infomation may be not right.
-  LoggedUsrType &active_user();
+  LoggedUserType &active_user();
   const UserPrivilege active_privilege();
   void open(const std::string &prefix);
   void close();
@@ -55,6 +59,7 @@ private:
   void user_select_book(const ISBNType &ISBN);
   bool empty() const;
   void clear();
+  void update_ISBN(const ISBNType &old_ISBN, const ISBNType &modified_ISBN);
 public:
   UserStack() = default;
   ~UserStack();
