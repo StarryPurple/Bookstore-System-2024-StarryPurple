@@ -54,6 +54,7 @@ private:
   void user_logout();
   void user_select_book(const ISBNType &ISBN);
   bool empty() const;
+  void clear();
 public:
   UserStack() = default;
   ~UserStack();

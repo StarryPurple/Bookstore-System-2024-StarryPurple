@@ -406,6 +406,12 @@ void StarryPurple::Fstack<Type, capacity>::push(const Type &value) {
   info.back_ptr = stack_fstream.allocate(info.back_node);
 }
 
+template<class Type, size_t capacity>
+void StarryPurple::Fstack<Type, capacity>::clear() {
+  while(!empty())
+    pop();
+}
+
 
 template<int capacity>
 StarryPurple::ConstStr<capacity>::ConstStr() {

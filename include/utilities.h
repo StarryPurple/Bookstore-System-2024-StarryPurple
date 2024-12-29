@@ -110,6 +110,7 @@ public:
   Type &top();
   bool empty() const;
   size_t size() const;
+  void clear();
 };
 
 template<int capacity>

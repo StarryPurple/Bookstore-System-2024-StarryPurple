@@ -87,17 +87,17 @@ void BookStore::CommandManager::command_list_book(const ArglistType &argv) {
       book_manager.list_ISBN(ISBNType(ISBN));
     } else if(std::regex_search(argv[1], match, bookname_aug_regex)) {
       std::string bookname = match[1];
-      expect(bookname).toBeConsistedOf(ascii_no_quotaton_alphabet);
+      expect(bookname).toBeConsistedOf(ascii_no_double_quotaton_alphabet);
       expect(bookname.empty()).toBe(false);
       book_manager.list_bookname(BookInfoType(bookname));
     } else if(std::regex_search(argv[1], match, author_aug_regex)) {
       std::string author = match[1];
-      expect(author).toBeConsistedOf(ascii_no_quotaton_alphabet);
+      expect(author).toBeConsistedOf(ascii_no_double_quotaton_alphabet);
       expect(author.empty()).toBe(false);
       book_manager.list_author(BookInfoType(author));
     } else if(std::regex_search(argv[1], match, keyword_aug_regex)) {
       std::string keyword = match[1];
-      expect(keyword).toBeConsistedOf(ascii_no_quotaton_alphabet);
+      expect(keyword).toBeConsistedOf(ascii_no_double_quotaton_alphabet);
       expect(keyword.empty()).toBe(false);
       book_manager.list_keyword(BookInfoType(keyword));
     } else throw StarryPurple::ValidatorException();
@@ -124,7 +124,7 @@ void BookStore::CommandManager::command_sellout(const ArglistType &argv) {
   QuantityType quantity = std::stoll(argv[2]);
   LogType log = book_manager.sellout(ISBNType(argv[1]), quantity);
 
-  log_manager.add_log(log, 0);
+  log_manager.add_log(log, 1);
 }
 
 void BookStore::CommandManager::command_select_book(const ArglistType &argv) {
@@ -152,19 +152,19 @@ void BookStore::CommandManager::command_modify_book(const ArglistType &argv) {
       if(is_modified[1])
         throw StarryPurple::ValidatorException();
       bookname = match[1];
-      expect(bookname).toBeConsistedOf(ascii_no_quotaton_alphabet);
+      expect(bookname).toBeConsistedOf(ascii_no_double_quotaton_alphabet);
       is_modified[1] = true;
     } else if(std::regex_search(argv[i], match, author_aug_regex)) {
       if(is_modified[2])
         throw StarryPurple::ValidatorException();
       author = match[1];
-      expect(author).toBeConsistedOf(ascii_no_quotaton_alphabet);
+      expect(author).toBeConsistedOf(ascii_no_double_quotaton_alphabet);
       is_modified[2] = true;
     } else if(std::regex_search(argv[i], match, keyword_aug_regex)) {
       if(is_modified[3])
         throw StarryPurple::ValidatorException();
       keyword_list = match[1];
-      expect(keyword_list).toBeConsistedOf(ascii_no_quotaton_alphabet);
+      expect(keyword_list).toBeConsistedOf(ascii_no_double_quotaton_alphabet);
       is_modified[3] = true;
     } else if(std::regex_search(argv[i], match, price_aug_regex)) {
       if(is_modified[4])
@@ -273,7 +273,6 @@ void BookStore::CommandManager::command_list_reader(const std::string &prefix, c
       else if(argv[0] == "delete")
         command_user_unregister(argv);
       else if(argv[0] == "show") {
-        expect(argv.size()).greaterEqual(2);
         if(argv[1] == "finance")
           command_show_finance(argv);
         else command_list_book(argv);

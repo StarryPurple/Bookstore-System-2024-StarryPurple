@@ -16,6 +16,8 @@ void BookStore::UserManager::open(const std::string &prefix) {
 
 void BookStore::UserManager::close() {
   if(!is_running) return;
+
+  user_stack.clear();
   user_stack.close();
   user_database.close();
   is_running = false;
@@ -204,7 +206,7 @@ BookStore::LogType BookStore::BookManager::sellout(const ISBNType &ISBN, const Q
   std::vector<BookType> book_vector = book_database.ISBN_map[ISBN];
   expect(book_vector.size()).toBe(1);
   BookType book = book_vector[0];
-  book_database.book_change_storage(book, quantity);
+  book_database.book_change_storage(book, -quantity); // remember this '-'
   std::cout << std::fixed << std::setprecision(2) << (book.price * quantity) << '\n';
   return LogType(book.price * quantity, 0, LogDescriptionType("log command buy"));
 }
@@ -225,6 +227,7 @@ void BookStore::BookManager::modify_book(
   bool is_to_modify[6] =
     {is_modified[0], is_modified[1], is_modified[2], is_modified[3], is_modified[4], false};
   book_database.book_modify_info(old_book, modified_book, is_to_modify);
+  if(is_modified[0]) user_stack_ptr->active_user().ISBN_selected = ISBN;
 }
 
 
@@ -246,6 +249,7 @@ void BookStore::LogManager::close() {
 }
 
 void BookStore::LogManager::show_deal_history(const LogCountType &count) {
+  expect(user_stack_ptr->active_privilege()).greaterEqual(UserPrivilege(7));
   expect(count).lesserEqual(log_database.info.finance_log_count);
   if(count == 0) {
     std::cout << '\n';
@@ -262,11 +266,13 @@ void BookStore::LogManager::show_deal_history(const LogCountType &count) {
 }
 
 void BookStore::LogManager::show_deal_history() {
+  expect(user_stack_ptr->active_privilege()).greaterEqual(UserPrivilege(7));
   std::cout << "+ " << std::fixed << std::setprecision(2) <<
     log_database.info.total_income << " - " << log_database.info.total_expenditure << '\n';
 }
 
 void BookStore::LogManager::report_finance() {
+  expect(user_stack_ptr->active_privilege()).greaterEqual(UserPrivilege(7));
   std::cout << "Now reporting finance history.\n";
   LogType log;
   PriceType history_income = 0, history_expenditure = 0;
@@ -289,6 +295,7 @@ void BookStore::LogManager::report_finance() {
 }
 
 void BookStore::LogManager::report_employee() {
+  expect(user_stack_ptr->active_privilege()).greaterEqual(UserPrivilege(7));
   std::cout << "Now reporting employee working history.\n";
   LogType log;
   for(size_t i = 1; i <= log_database.info.employee_work_log_count; ++i) {
@@ -299,6 +306,7 @@ void BookStore::LogManager::report_employee() {
 }
 
 void BookStore::LogManager::report_history() {
+  expect(user_stack_ptr->active_privilege()).greaterEqual(UserPrivilege(7));
   std::cout << "Now reporting system history.\n";
   LogType log;
   for(size_t i = 1; i <= log_database.info.all_log_count; ++i) {

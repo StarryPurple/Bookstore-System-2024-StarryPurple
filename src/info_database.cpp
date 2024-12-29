@@ -18,6 +18,11 @@ void BookStore::UserStack::close() {
   is_open = false;
 }
 
+void BookStore::UserStack::clear() {
+  u_stack.clear();
+  logged_set.clear();
+}
+
 BookStore::LoggedUsrType::LoggedUsrType(const UserType &user)
   : user_id(user.ID), privilege(user.privilege) {}
 
@@ -146,6 +151,7 @@ std::vector<BookStore::BookInfoType> BookStore::BookDatabase::keyword_splitter(
 
 
 void BookStore::BookDatabase::book_register(const BookType &book) {
+  expect(ISBN_map[book.isbn].size()).toBe(0);
   book_map.insert(0, book);
   ISBN_map.insert(book.isbn, book);
   bookname_map.insert(book.bookname, book);
@@ -156,9 +162,8 @@ void BookStore::BookDatabase::book_register(const BookType &book) {
 
 void BookStore::BookDatabase::book_modify_info(
   const BookType &old_book, BookType &modified_book, bool is_modified[6]) {
-  if(!is_modified[0])
-    modified_book.isbn = old_book.isbn;
-  else expect(modified_book.isbn).Not().toBe(old_book.isbn);
+  if(!is_modified[0]) modified_book.isbn = old_book.isbn;
+  else expect(ISBN_map[modified_book.isbn].size()).toBe(0);
   if(!is_modified[1]) modified_book.bookname = old_book.bookname;
   if(!is_modified[2]) modified_book.author = old_book.author;
   if(!is_modified[3])
@@ -239,11 +244,11 @@ void BookStore::LogDatabase::add_log(
   const LogDescriptionType &description, int log_level) {
   info.total_income += income;
   info.total_expenditure += expenditure;
-  LogType log(income, expenditure, description);
+  LogType log(info.total_income, info.total_expenditure, description);
   all_log_id_map.insert(++info.all_log_count, log);
-  if(log_level | 1)
+  if(log_level & 1)
     finance_log_id_map.insert(++info.finance_log_count, log);
-  if(log_level | 2)
+  if(log_level & 2)
     employee_work_log_id_map.insert(++info.employee_work_log_count, log);
 }
 

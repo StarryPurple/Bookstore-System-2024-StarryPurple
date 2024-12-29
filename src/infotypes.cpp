@@ -3,7 +3,7 @@
 #include <iomanip>
 
 BookStore::UserPrivilege::UserPrivilege(int privilege)
-  : pri_1(privilege | 1), pri_2(privilege | 2), pri_3(privilege | 4) {}
+  : pri_1(privilege & 1), pri_2(privilege & 2), pri_3(privilege & 4) {}
 
 BookStore::UserPrivilege::UserPrivilege(const UserPrivilege &other)
   : pri_1(other.pri_1), pri_2(other.pri_2), pri_3(other.pri_3) {}

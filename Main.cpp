@@ -12,7 +12,7 @@ void mian() {
 void Main() {
   // freopen("input.txt", "r", stdin); freopen("output.txt", "w", stdout);
   BookStore::CommandManager command_manager;
-  command_manager.command_list_reader("Test", "../data/");
+  command_manager.command_list_reader("Test", "./");
   // fclose(stdin); fclose(stdout);
 }
 

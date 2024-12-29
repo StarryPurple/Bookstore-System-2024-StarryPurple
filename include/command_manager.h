@@ -13,8 +13,8 @@ class CommandManager {
   using ArglistType = std::vector<std::string>;
 private:
   const std::string
-    ascii_no_quotaton_alphabet =
-      "!#$%&()*+,-./"
+    ascii_no_double_quotaton_alphabet =
+      "!#$%&'()*+,-./"
        "0123456789:;<=>?"
        "@ABCDEFGHIJKLMNO"
        "PQRSTUVWXYZ[\\]^_"
