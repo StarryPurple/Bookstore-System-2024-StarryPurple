@@ -11,12 +11,15 @@ StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::~Fmultimap() {
 }
 
 template<class KeyType, class ValueType, size_t degree, size_t capacity>
-void StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::open(
+bool StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::open(
   const filenameType &prefix) {
-  inner_fstream.open(prefix + "_inner.bsdat");
+  bool is_exist = inner_fstream.open(prefix + "_inner.bsdat");
   vlist_fstream.open(prefix + "_vlist.bsdat");
   is_open = true;
-  inner_fstream.read_info(root_ptr);
+  if(is_exist)
+    inner_fstream.read_info(root_ptr);
+  else root_ptr.setnull();
+  return is_exist;
 }
 
 template<class KeyType, class ValueType, size_t degree, size_t capacity>
@@ -500,7 +503,7 @@ StarryPurple::ConstStr<capacity>::ConstStr(const ConstStr &other) {
 }
 
 template<int capacity>
-std::string StarryPurple::ConstStr<capacity>::to_str() {
+std::string StarryPurple::ConstStr<capacity>::to_str() const {
   return std::string(storage);
 }
 

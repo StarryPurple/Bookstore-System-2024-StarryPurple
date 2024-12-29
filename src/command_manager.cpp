@@ -13,7 +13,7 @@ void BookStore::CommandManager::command_login(const ArglistType &argv) {
     user_manager.login(UserInfoType(argv[1]));
   else {
     expect(argv[2]).toBeConsistedOf(digit_alpha_underline_alphabet);
-    user_manager.login(UserInfoType(argv[1]), UserInfoType(argv[2]));
+    user_manager.login(UserInfoType(argv[1]), PasswordType(argv[2]));
   }
 }
 
@@ -83,18 +83,22 @@ void BookStore::CommandManager::command_list_book(const ArglistType &argv) {
     if(std::regex_search(argv[1], match, ISBN_aug_regex)) {
       std::string ISBN = match[1];
       expect(ISBN).toBeConsistedOf(ascii_alphabet);
+      expect(ISBN.empty()).toBe(false);
       book_manager.list_ISBN(ISBNType(ISBN));
     } else if(std::regex_search(argv[1], match, bookname_aug_regex)) {
       std::string bookname = match[1];
       expect(bookname).toBeConsistedOf(ascii_no_quotaton_alphabet);
+      expect(bookname.empty()).toBe(false);
       book_manager.list_bookname(BookInfoType(bookname));
     } else if(std::regex_search(argv[1], match, author_aug_regex)) {
       std::string author = match[1];
       expect(author).toBeConsistedOf(ascii_no_quotaton_alphabet);
+      expect(author.empty()).toBe(false);
       book_manager.list_author(BookInfoType(author));
     } else if(std::regex_search(argv[1], match, keyword_aug_regex)) {
       std::string keyword = match[1];
       expect(keyword).toBeConsistedOf(ascii_no_quotaton_alphabet);
+      expect(keyword.empty()).toBe(false);
       book_manager.list_keyword(BookInfoType(keyword));
     } else throw StarryPurple::ValidatorException();
   }
@@ -118,7 +122,9 @@ void BookStore::CommandManager::command_sellout(const ArglistType &argv) {
   expect(argv[1]).toBeConsistedOf(ascii_alphabet);
   expect(argv[2]).toBeConsistedOf(digit_alphabet);
   QuantityType quantity = std::stoll(argv[2]);
-  book_manager.sellout(ISBNType(argv[1]), quantity);
+  LogType log = book_manager.sellout(ISBNType(argv[1]), quantity);
+
+  log_manager.add_log(log, 0);
 }
 
 void BookStore::CommandManager::command_select_book(const ArglistType &argv) {
@@ -181,22 +187,23 @@ void BookStore::CommandManager::command_restock(const ArglistType &argv) {
   expect(argv[2]).toBeConsistedOf(digit_with_dot_alphabet);
   QuantityType quantity = std::stoll(argv[1]);
   PriceType price = std::stod(argv[2]);
-  book_manager.restock(quantity, price);
+  LogType log = book_manager.restock(quantity, price);
+  log_manager.add_log(log, 1);
 }
 
 void BookStore::CommandManager::command_show_log(const ArglistType &argv) {
   // “log”
   expect(argv.size()).toBe(1);
-  log_manager.report_system_history();
+  log_manager.report_history();
 }
 
 void BookStore::CommandManager::command_show_report(const ArglistType &argv) {
   // “report finance”, "report employee"
   expect(argv.size()).toBe(2);
   if(argv[1] == "finance")
-    log_manager.report_finance_history();
+    log_manager.report_finance();
   if(argv[1] == "employee")
-    log_manager.report_employee_working_history();
+    log_manager.report_employee();
   else throw StarryPurple::ValidatorException();
 }
 

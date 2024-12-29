@@ -48,7 +48,7 @@ private:
 public:
   Fmultimap() = default;
   ~Fmultimap();
-  void open(const filenameType &prefix);
+  bool open(const filenameType &prefix);
   void close();
 
   void insert(const KeyType &key, const ValueType &value);
@@ -122,7 +122,7 @@ public:
   ~ConstStr() = default;
   ConstStr(const std::string &str);
   ConstStr(const ConstStr &other);
-  std::string to_str();
+  std::string to_str() const;
   bool operator==(const ConstStr &other) const;
   bool operator!=(const ConstStr &other) const;
   bool operator<(const ConstStr &other) const;

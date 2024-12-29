@@ -9,10 +9,9 @@ public:
 };
 
 int main() {
-  // TODO: add "root sjtu".
   // freopen("input.txt", "r", stdin); freopen("output.txt", "w", stdout);
   BookStore::CommandManager command_manager;
-  command_manager.command_list_reader();
+  command_manager.command_list_reader("../data", "Test");
   // fclose(stdin); fclose(stdout);
   return 0;
 }

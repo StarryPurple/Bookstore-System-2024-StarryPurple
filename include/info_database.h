@@ -23,37 +23,38 @@ class UserDatabase;
 class BookDatabase;
 class LogDatabase;
 
-using UserPtr = StarryPurple::Fpointer<cMaxFlowSize + 1>; // accord to user database capacity
-using BookPtr = StarryPurple::Fpointer<cMaxFlowSize + 2>; // accord to book database capacity
-using LogPtr = StarryPurple::Fpointer<cMaxFlowSize + 3>; // accord to log database sapacity
+using UserPtr = typename StarryPurple::Fpointer<cMaxFlowSize + 1>; // accord to user database capacity
+using BookPtr = typename StarryPurple::Fpointer<cMaxFlowSize + 2>; // accord to book database capacity
+using LogPtr = typename StarryPurple::Fpointer<cMaxFlowSize + 3>; // accord to log database sapacity
 
 class LoggedUsrType {
   friend UserStack;
   friend BookManager;
 private:
-  UserType user;
-  BookType book_selected{};
+  const UserInfoType user_id;
+  const UserPrivilege privilege;
+  BookInfoType ISBN_selected{};
   bool has_selected_book = false;
 public:
-  LoggedUsrType(const UserType &usr);
+  LoggedUsrType(const UserType &user);
 };
 
 class UserStack {
-  friend UserManager; // command "login" "logout"
+  friend UserManager; // for active user
   friend BookManager; // for active user
-  friend LogManager; // log commit
+  friend LogManager; // for actibe user, log commit
 private:
   bool is_open = false;
   StarryPurple::Fstack<LoggedUsrType, cMaxFlowSize> u_stack;
   std::unordered_set<UserInfoType> logged_set;
   // The password infomation may be not right.
-  LoggedUsrType &active_usr();
+  LoggedUsrType &active_user();
   const UserPrivilege &active_privilege();
   void open(const std::string &prefix);
   void close();
   void user_login(const UserType &user);
   void user_logout();
-  void user_select_book(const BookType &book);
+  void user_select_book(const BookInfoType &ISBN);
   bool empty() const;
 public:
   UserStack() = default;
@@ -63,10 +64,8 @@ public:
 class UserDatabase {
   friend UserManager; // command "useradd" "register" "delete"
 private:
-  size_t user_number;
   bool is_open = false;
-  StarryPurple::Fstream<UserType, size_t, cMaxFlowSize + 1> user_data;
-  StarryPurple::Fmultimap<UserInfoType, UserPtr, 30, cMaxFlowSize> id_map;
+  StarryPurple::Fmultimap<UserInfoType, UserType, 30, cMaxFlowSize> user_id_map;
   void open(const std::string &prefix);
   void close();
   void user_register(const UserType &user);
@@ -80,19 +79,18 @@ public:
 class BookDatabase {
   friend BookManager; // command "select"
 private:
-  size_t book_number;
-  StarryPurple::Fstream<BookType, size_t, cMaxFlowSize + 2> book_data;
-  StarryPurple::Fmultimap<size_t, BookPtr, 30, cMaxFlowSize> ID_map;
-  StarryPurple::Fmultimap<ISBNType, BookPtr, 30, cMaxFlowSize> ISBN_map;
-  StarryPurple::Fmultimap<BookInfoType, BookPtr, 30, cMaxFlowSize>
+  StarryPurple::Fmultimap<size_t, BookType, 30, cMaxFlowSize> book_map; // maps 0 to all books
+  StarryPurple::Fmultimap<ISBNType, BookType, 30, cMaxFlowSize> ISBN_map;
+  StarryPurple::Fmultimap<BookInfoType, BookType, 30, cMaxFlowSize>
     bookname_map, author_map, keyword_map;
   bool is_open = false;
   void open(const std::string &prefix);
   void close();
-  std::vector<BookInfoType> keyword_splitter(const BookInfoType &keyword_list);
+  static std::vector<BookInfoType> keyword_splitter(const BookInfoType &keyword_list);
   void book_register(const BookType &book);
-  // modify list: [ISBN, bookname, author, keyword_list, price]
-  void book_modify_info(const BookPtr &book_ptr, const BookType &new_book, bool is_modified[5]);
+  // modify list: [ISBN, bookname, author, keyword_list, price, storage]
+  void book_modify_info(const BookType &old_book, BookType &modified_book, bool is_modified[6]);
+  void book_change_storage(const BookType &book, const QuantityType &quantity); // quantity can be negative
 public:
   BookDatabase() = default;
   ~BookDatabase();
@@ -107,10 +105,10 @@ private:
     PriceType total_income, total_expenditure;
   };
   InfoType info;
-  StarryPurple::Fstream<LogType, InfoType, cMaxFlowSize + 3> log_data;
-  StarryPurple::Fmultimap<size_t, LogPtr, 30, cMaxFlowSize> all_log_id_map; // all logs
-  StarryPurple::Fmultimap<size_t, LogPtr, 30, cMaxFlowSize> finance_log_id_map;
-  StarryPurple::Fmultimap<size_t, LogPtr, 30, cMaxFlowSize> employee_work_log_id_map;
+  StarryPurple::Fstream<size_t, InfoType, 10> log_info;
+  StarryPurple::Fmultimap<size_t, LogType, 30, cMaxFlowSize> all_log_id_map; // all logs
+  StarryPurple::Fmultimap<size_t, LogType, 30, cMaxFlowSize> finance_log_id_map;
+  StarryPurple::Fmultimap<size_t, LogType, 30, cMaxFlowSize> employee_work_log_id_map;
   bool is_open = false;
   // Common:
   //   record everyone's call for all commands:

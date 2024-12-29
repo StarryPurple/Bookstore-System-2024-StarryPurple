@@ -13,6 +13,7 @@ using StarryPurple::expect;
 
 // friend classes
 
+class LoggedUsrType;
 class UserStack;
 class UserDatabase;
 class BookDatabase;
@@ -65,10 +66,16 @@ public:
   BookType() = default;
   BookType(const ISBNType &ISBN);
   ~BookType() = default;
+  void print() const;
+  bool operator<(const BookType &other) const;
+  bool operator>(const BookType &other) const;
+  bool operator<=(const BookType &other) const;
+  bool operator>=(const BookType &other) const;
 };
 
 
 class UserType {
+  friend LoggedUsrType;
   friend UserStack;
   friend UserDatabase;
   friend UserManager; // needed?

@@ -1,6 +1,7 @@
 #include "info_manager.h"
 
 #include <iomanip>
+#include <set>
 
 BookStore::UserManager::~UserManager() {
   if(is_running) close();
@@ -21,37 +22,33 @@ void BookStore::UserManager::close() {
 }
 
 void BookStore::UserManager::login(const UserInfoType &userID, const PasswordType &password) {
-  std::vector<UserPtr> user_ptr_vector = user_database.id_map[userID];
-  expect(user_ptr_vector.size()).toBe(1);
-  UserPtr user_ptr = user_ptr_vector[0];
-  UserType user;
-  user_database.user_data.read(user, user_ptr);
-  expect(user.passwd).toBe(password);
+  std::vector<UserType> user_vector = user_database.user_id_map[userID];
+  expect(user_vector.size()).toBe(1);
+  UserType user = user_vector[0];
   user_stack.user_login(user);
+  expect(user.passwd).toBe(password);
 }
 
 
 void BookStore::UserManager::login(const UserInfoType &userID) {
-  std::vector<UserPtr> user_ptr_vector = user_database.id_map[userID];
-  expect(user_ptr_vector.size()).toBe(1);
-  UserPtr user_ptr = user_ptr_vector[0];
-  UserType user;
-  user_database.user_data.read(user, user_ptr);
-  expect(user_stack.active_privilege()).Not().lesserEqual(user.privilege);
+  std::vector<UserType> user_vector = user_database.user_id_map[userID];
+  expect(user_vector.size()).toBe(1);
+  UserType user = user_vector[0];
+  expect(user_stack.active_privilege()).greaterEqual(user.privilege);
   user_stack.user_login(user);
 }
 
 void BookStore::UserManager::user_register(const UserType &user) {
-  std::vector<UserPtr> user_ptr_vector = user_database.id_map[user.ID];
-  expect(user_ptr_vector.size()).toBe(0);
+  std::vector<UserType> user_vector = user_database.user_id_map[user.ID];
+  expect(user_vector.size()).toBe(0);
   user_database.user_register(user);
 }
 
 void BookStore::UserManager::user_add(const UserType &user) {
-  expect(user_stack.active_privilege()).Not().lesserEqual(UserPrivilege(3));
+  expect(user_stack.active_privilege()).greaterEqual(UserPrivilege(3));
   expect(user_stack.active_privilege()).Not().lesserEqual(user.privilege);
-  std::vector<UserPtr> user_ptr_vector = user_database.id_map[user.ID];
-  expect(user_ptr_vector.size()).toBe(1);
+  std::vector<UserType> user_vector = user_database.user_id_map[user.ID];
+  expect(user_vector.size()).toBe(0);
   user_database.user_register(user);
 }
 
@@ -60,46 +57,46 @@ void BookStore::UserManager::user_add(const UserType &user) {
 void BookStore::UserManager::change_password(
     const UserInfoType &userID,
     const PasswordType &cur_pwd, const PasswordType &new_pwd) {
-  expect(user_stack.active_privilege()).Not().lesserEqual(UserPrivilege(1));
-  std::vector<UserPtr> user_ptr_vector = user_database.id_map[userID];
-  expect(user_ptr_vector.size()).toBe(1);
-  UserPtr user_ptr = user_ptr_vector[0];
-  UserType user;
-  user_database.user_data.read(user, user_ptr);
+  expect(user_stack.active_privilege()).greaterEqual(UserPrivilege(1));
+  std::vector<UserType> user_vector = user_database.user_id_map[userID];
+  expect(user_vector.size()).toBe(1);
+  UserType user = user_vector[0];
   expect(user.passwd).toBe(cur_pwd);
+  user_database.user_id_map.erase(userID, user);
   user.passwd = new_pwd;
-  user_database.user_data.write(user, user_ptr);
+  user_database.user_id_map.insert(userID, user);
 }
 
 void BookStore::UserManager::change_password(
   const UserInfoType &userID,
   const PasswordType &new_pwd) {
   expect(user_stack.active_privilege()).greaterEqual(UserPrivilege(7));
-  std::vector<UserPtr> user_ptr_vector = user_database.id_map[userID];
-  expect(user_ptr_vector.size()).toBe(1);
-  UserPtr user_ptr = user_ptr_vector[0];
-  UserType user;
-  user_database.user_data.read(user, user_ptr);
+  std::vector<UserType> user_vector = user_database.user_id_map[userID];
+  expect(user_vector.size()).toBe(1);
+  UserType user = user_vector[0];
+  user_database.user_id_map.erase(userID, user);
   user.passwd = new_pwd;
-  user_database.user_data.write(user, user_ptr);
+  user_database.user_id_map.insert(userID, user);
 }
 
 void BookStore::UserManager::logout() {
-  expect(user_stack.active_privilege()).Not().lesserEqual(UserPrivilege(1));
+  expect(user_stack.active_privilege()).greaterEqual(UserPrivilege(1));
   expect(user_stack.empty()).toBe(false);
   user_stack.user_logout();
 }
 
 void BookStore::UserManager::user_unregister(const UserInfoType &userID) {
-  expect(user_stack.active_privilege()).Not().lesserEqual(UserPrivilege(7));
-  std::vector<UserPtr> user_ptr_vector = user_database.id_map[userID];
-  expect(user_ptr_vector.size()).toBe(1);
-  UserPtr user_ptr = user_ptr_vector[0];
-  UserType user;
-  user_database.user_data.read(user, user_ptr);
+  expect(user_stack.active_privilege()).greaterEqual(UserPrivilege(7));
   expect(user_stack.logged_set.count(userID)).toBe(0);
+  std::vector<UserType> user_vector = user_database.user_id_map[userID];
+  expect(user_vector.size()).toBe(1);
   user_database.user_unregister(userID);
 }
+
+
+
+
+
 
 
 BookStore::BookManager::~BookManager() {
@@ -118,51 +115,116 @@ void BookStore::BookManager::close() {
   is_running = false;
 }
 
-void BookStore::BookManager::select_book(const ISBNType &ISBN, LoggedUsrType &active_user) {
-  expect(user_stack_ptr->active_privilege()).Not().lesserEqual(UserPrivilege(3));
-  auto book_ptr_vector = book_database.ISBN_map[ISBN];
-  expect(book_ptr_vector.size()).toBe(1);
-  BookType book;
-  book_database.book_data.read(book, book_ptr_vector[0]);
-  active_user.book_selected = book;
-  active_user.has_selected_book = true;
+void BookStore::BookManager::select_book(const ISBNType &ISBN) {
+  expect(user_stack_ptr->active_privilege()).greaterEqual(UserPrivilege(3));
+  std::vector<BookType> book_vector = book_database.ISBN_map[ISBN];
+  if(book_vector.size() == 0) {
+    BookType book;
+    book.isbn = ISBN;
+    book_database.book_register(book);
+    user_stack_ptr->user_select_book(ISBN);
+  } else if(book_vector.size() == 1) {
+    user_stack_ptr->user_select_book(book_vector[0].isbn);
+  } else assert(false);
 }
 
 void BookStore::BookManager::list_all() {
-  expect(user_stack_ptr->active_privilege()).Not().lesserEqual(UserPrivilege(1));
-  for(size_t i = 1; i <= book_database.book_number; ++i) {
-
-  }
+  expect(user_stack_ptr->active_privilege()).greaterEqual(UserPrivilege(1));
+  std::vector<BookType> book_vector = book_database.book_map[0];
+  if(book_vector.empty())
+    std::cout << '\n';
+  else
+    for(const auto &book: book_vector)
+      book.print();
 }
 
-void BookStore::BookManager::list_ISBN(const ISBNType &ISBN) {
 
+void BookStore::BookManager::list_ISBN(const ISBNType &ISBN) {
+  expect(user_stack_ptr->active_privilege()).greaterEqual(UserPrivilege(1));
+  expect(ISBN.empty()).toBe(false);
+  std::vector<BookType> book_vector = book_database.ISBN_map[ISBN];
+  if(book_vector.empty())
+    std::cout << '\n';
+  else
+    for(const auto &book: book_vector)
+      book.print();
 }
 
 void BookStore::BookManager::list_bookname(const BookInfoType &bookname) {
-
+  expect(user_stack_ptr->active_privilege()).greaterEqual(UserPrivilege(1));
+  expect(bookname.empty()).toBe(false);
+  std::vector<BookType> book_vector = book_database.bookname_map[bookname];
+  if(book_vector.empty())
+    std::cout << '\n';
+  else
+    for(const auto &book: book_vector)
+      book.print();
 }
 
 void BookStore::BookManager::list_author(const BookInfoType &author) {
-
+  expect(user_stack_ptr->active_privilege()).greaterEqual(UserPrivilege(1));
+  expect(author.empty()).toBe(false);
+  std::vector<BookType> book_vector = book_database.author_map[author];
+  if(book_vector.empty())
+    std::cout << '\n';
+  else
+    for(const auto &book: book_vector)
+      book.print();
 }
 
 void BookStore::BookManager::list_keyword(const BookInfoType &keyword) {
-
+  expect(user_stack_ptr->active_privilege()).greaterEqual(UserPrivilege(1));
+  expect(keyword.empty()).toBe(false);
+  for(int i = 0; i < keyword.length(); ++i)
+    expect(keyword[i]).Not().toBe('|');  // True?
+  std::vector<BookType> book_vector = book_database.keyword_map[keyword];
+  if(book_vector.empty())
+    std::cout << '\n';
+  else
+    for(const auto &book: book_vector)
+      book.print();
 }
 
-void BookStore::BookManager::restock(const QuantityType &quantity, const PriceType &total_cost) {
-
+BookStore::LogType BookStore::BookManager::restock(
+  const QuantityType &quantity, const PriceType &total_cost) {
+  expect(user_stack_ptr->active_privilege()).greaterEqual(UserPrivilege(3));
+  expect(user_stack_ptr->active_user().has_selected_book).toBe(true);
+  expect(quantity).Not().lesserEqual(0);
+  expect(total_cost).Not().lesserEqual(0.0);
+  BookInfoType ISBN = user_stack_ptr->active_user().ISBN_selected;
+  std::vector<BookType> book_vector = book_database.ISBN_map[ISBN];
+  BookType book = book_vector[0];
+  book_database.book_change_storage(book, quantity);
+  return LogType(0, total_cost, LogDescriptionType("log command import"));
 }
 
-void BookStore::BookManager::sellout(const ISBNType &ISBN, const QuantityType &quantity) {
-
+BookStore::LogType BookStore::BookManager::sellout(const ISBNType &ISBN, const QuantityType &quantity) {
+  expect(user_stack_ptr->active_privilege()).greaterEqual(UserPrivilege(1));
+  expect(quantity).Not().lesserEqual(0);
+  std::vector<BookType> book_vector = book_database.ISBN_map[ISBN];
+  expect(book_vector.size()).toBe(1);
+  BookType book = book_vector[0];
+  book_database.book_change_storage(book, quantity);
+  std::cout << std::fixed << std::setprecision(2) << (book.price * quantity) << '\n';
+  return LogType(book.price * quantity, 0, LogDescriptionType("log command buy"));
 }
 
 void BookStore::BookManager::modify_book(
   const ISBNType &ISBN, const BookInfoType &bookname,const BookInfoType &author,
   const BookInfoType &keyword_list, const PriceType &price, bool is_modified[5]) {
-
+  expect(user_stack_ptr->active_privilege()).greaterEqual(UserPrivilege(3));
+  expect(user_stack_ptr->active_user().has_selected_book).toBe(true);
+  BookInfoType old_ISBN = user_stack_ptr->active_user().ISBN_selected;
+  std::vector<BookType> book_vector = book_database.ISBN_map[old_ISBN];
+  assert(book_vector.size() == 1); // Needed?
+  BookType old_book = book_vector[0];
+  BookType modified_book;
+  modified_book.isbn = ISBN; modified_book.bookname = bookname;
+  modified_book.author = author;
+  modified_book.keyword_list = keyword_list; modified_book.price = price;
+  bool is_to_modify[6] =
+    {is_modified[0], is_modified[1], is_modified[2], is_modified[3], is_modified[4], false};
+  book_database.book_modify_info(old_book, modified_book, is_to_modify);
 }
 
 
@@ -193,18 +255,13 @@ void BookStore::LogManager::show_deal_history(const LogCountType &count) {
     show_deal_history();
     return;
   }
-  LogType history_log;
-  LogPtr history_log_ptr = log_database.all_log_id_map[log_database.info.finance_log_count - count][0];
-  log_database.log_data.read(history_log, history_log_ptr);
+  LogType history_log = log_database.all_log_id_map[log_database.info.finance_log_count - count][0];
   std::cout << "+ " << std::fixed << std::setprecision(2) <<
     log_database.info.total_income - history_log.total_income
   << " - " << log_database.info.total_expenditure - history_log.total_expenditure << '\n';
 }
 
 void BookStore::LogManager::show_deal_history() {
-  if(log_database.info.finance_log_count == 0) {
-
-  }
   std::cout << "+ " << std::fixed << std::setprecision(2) <<
     log_database.info.total_income << " - " << log_database.info.total_expenditure << '\n';
 }
@@ -212,11 +269,9 @@ void BookStore::LogManager::show_deal_history() {
 void BookStore::LogManager::report_finance() {
   std::cout << "Now reporting finance history.\n";
   LogType log;
-  LogPtr log_ptr;
   PriceType history_income = 0, history_expenditure = 0;
   for(size_t i = 1; i <= log_database.info.finance_log_count; ++i) {
-    log_ptr = log_database.finance_log_id_map[i][0];
-    log_database.log_data.read(log, log_ptr);
+    log = log_database.finance_log_id_map[i][0];
 
     if(log.total_income - history_income != 0)
       std::cout << "Earned: " << std::fixed << std::setprecision(2) <<
@@ -236,10 +291,8 @@ void BookStore::LogManager::report_finance() {
 void BookStore::LogManager::report_employee() {
   std::cout << "Now reporting employee working history.\n";
   LogType log;
-  LogPtr log_ptr;
   for(size_t i = 1; i <= log_database.info.employee_work_log_count; ++i) {
-    log_ptr = log_database.employee_work_log_id_map[i][0];
-    log_database.log_data.read(log, log_ptr);
+    log = log_database.employee_work_log_id_map[i][0];
     std::cout << log.log_description.to_str() << '\n';
   }
   std::cout << '\n';
@@ -248,11 +301,14 @@ void BookStore::LogManager::report_employee() {
 void BookStore::LogManager::report_history() {
   std::cout << "Now reporting system history.\n";
   LogType log;
-  LogPtr log_ptr;
   for(size_t i = 1; i <= log_database.info.all_log_count; ++i) {
-    log_ptr = log_database.all_log_id_map[i][0];
-    log_database.log_data.read(log, log_ptr);
+    log = log_database.all_log_id_map[i][0];
     std::cout << log.log_description.to_str() << '\n';
   }
   std::cout << '\n';
+}
+
+void BookStore::LogManager::add_log(
+  const LogType &log, int log_level) {
+  log_database.add_log(log.total_income, log.total_expenditure, log.log_description, log_level);
 }
