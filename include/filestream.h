@@ -34,6 +34,8 @@
 #include <fstream>
 #include <cassert>
 #include <cstring>
+#include <iostream>
+#include <string>
 
 namespace StarryPurple {
 
@@ -82,7 +84,7 @@ public:
 
   // open a file.
   // return whether the file exists before.
-  bool open(const filenameType &filename);
+  bool open(const std::string &filename);
   // close the currently opened file.
   void close();
 
@@ -112,7 +114,7 @@ private:
   offsetType lru_loc_ = 0;
   bool bitmap_[capacity]{};
   std::fstream file_{};
-  filenameType filename_;
+  std::string filename_;
 
 };
 

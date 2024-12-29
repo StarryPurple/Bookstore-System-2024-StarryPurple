@@ -4,6 +4,7 @@
 #include "infotypes.h"
 
 #include <set>
+#include <string>
 
 namespace BookStore {
 
@@ -27,11 +28,12 @@ class LoggedUsrType {
   friend UserStack;
   friend BookManager;
 private:
-  const UserInfoType user_id;
-  const UserPrivilege privilege;
-  BookInfoType ISBN_selected{};
+  UserInfoType user_id;
+  UserPrivilege privilege;
+  ISBNType ISBN_selected{};
   bool has_selected_book = false;
 public:
+  LoggedUsrType() = default;
   LoggedUsrType(const UserType &user);
 };
 
@@ -45,12 +47,12 @@ private:
   std::set<UserInfoType> logged_set;
   // The password infomation may be not right.
   LoggedUsrType &active_user();
-  const UserPrivilege &active_privilege();
+  const UserPrivilege active_privilege();
   void open(const std::string &prefix);
   void close();
   void user_login(const UserType &user);
   void user_logout();
-  void user_select_book(const BookInfoType &ISBN);
+  void user_select_book(const ISBNType &ISBN);
   bool empty() const;
 public:
   UserStack() = default;

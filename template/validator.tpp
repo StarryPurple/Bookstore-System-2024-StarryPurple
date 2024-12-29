@@ -36,7 +36,7 @@ template<class T>
 template<class U, class... Args>
 StarryPurple::Validator<T>
 &StarryPurple::Validator<T>::toBeOneOf(const U &other, const Args &... args) {
-  bool res = (std::is_same_v<T, U> && v == other);
+  bool res = (v == other);
   if(res ^ is_rev)
     return *this;
   return toBeOneOf(args ...);
@@ -46,7 +46,7 @@ template<class T>
 template<class U>
 StarryPurple::Validator<T>
 &StarryPurple::Validator<T>::toBeOneOf(const U &other) {
-  bool res = (std::is_same_v<T, U> && v == other);
+  bool res = (v == other);
   if(res ^ is_rev)
     return *this;
   throw ValidatorException();

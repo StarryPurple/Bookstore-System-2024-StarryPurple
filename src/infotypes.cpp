@@ -26,6 +26,14 @@ bool BookStore::UserPrivilege::operator>=(const UserPrivilege &other) const {
 
 BookStore::BookType::BookType(const ISBNType &ISBN) : isbn(ISBN) {}
 
+bool BookStore::BookType::operator==(const BookType &other) const {
+  return isbn == other.isbn;
+}
+
+bool BookStore::BookType::operator!=(const BookType &other) const {
+  return isbn != other.isbn;
+}
+
 bool BookStore::BookType::operator<(const BookType &other) const {
   return isbn < other.isbn;
 }
@@ -53,9 +61,58 @@ BookStore::UserType::UserType(
   int user_privilege, const UserInfoType &name)
     : ID(userID), passwd(password), privilege(user_privilege), username(name) {}
 
+bool BookStore::UserType::operator==(const UserType &other) const {
+  return ID == other.ID;
+}
+
+bool BookStore::UserType::operator!=(const UserType &other) const {
+  return ID != other.ID;
+}
+
+bool BookStore::UserType::operator<(const UserType &other) const {
+  return ID < other.ID;
+}
+
+bool BookStore::UserType::operator>(const UserType &other) const {
+  return ID > other.ID;
+}
+
+bool BookStore::UserType::operator<=(const UserType &other) const {
+  return ID <= other.ID;
+}
+
+bool BookStore::UserType::operator>=(const UserType &other) const {
+  return ID >= other.ID;
+}
+
+size_t BookStore::LogType::log_count = 0;
+
 BookStore::LogType::LogType(
   const PriceType &history_income, const PriceType &history_expenditure,
   const LogDescriptionType &description)
-    :total_income(history_income), total_expenditure(history_expenditure),
+    : id(++log_count), total_income(history_income), total_expenditure(history_expenditure),
      log_description(description) {}
 
+bool BookStore::LogType::operator==(const LogType &other) const {
+  return id == other.id;
+}
+
+bool BookStore::LogType::operator!=(const LogType &other) const {
+  return id != other.id;
+}
+
+bool BookStore::LogType::operator<(const LogType &other) const {
+  return id < other.id;
+}
+
+bool BookStore::LogType::operator>(const LogType &other) const {
+  return id > other.id;
+}
+
+bool BookStore::LogType::operator<=(const LogType &other) const {
+  return id <= other.id;
+}
+
+bool BookStore::LogType::operator>=(const LogType &other) const {
+  return id >= other.id;
+}

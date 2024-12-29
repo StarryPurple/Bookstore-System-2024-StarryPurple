@@ -12,7 +12,7 @@ StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::~Fmultimap() {
 
 template<class KeyType, class ValueType, size_t degree, size_t capacity>
 bool StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::open(
-  const filenameType &prefix) {
+  const std::string &prefix) {
   bool is_exist = inner_fstream.open(prefix + "_inner.bsdat");
   vlist_fstream.open(prefix + "_vlist.bsdat");
   is_open = true;
@@ -45,32 +45,6 @@ void StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::insert(
     inner_root_node.keys[0] = key; inner_root_node.vlist_ptrs[0] = vlist_fstream.allocate(vlist_begin_node);
     root_ptr = inner_fstream.allocate(inner_root_node);
     // initialize requires no maintain_size.
-    return;
-  }
-  // cache insertion.
-  if(auto [cur_vlist_ptr, is_succeed] = vlist_begin_cache.find(key); is_succeed) {
-    // todo: write the duplicated code as a function.
-    VlistNode cur_vlist_node; vlist_fstream.read(cur_vlist_node, cur_vlist_ptr);
-    VlistPtr nxt_vlist_ptr = cur_vlist_node.nxt;
-    VlistNode nxt_vlist_node;
-    while(!nxt_vlist_ptr.isnull()) {
-      vlist_fstream.read(nxt_vlist_node, nxt_vlist_ptr);
-      if(value == nxt_vlist_node.value) return; // ignore inserting duplicated key-value pair
-      if(value < nxt_vlist_node.value) {
-        VlistNode new_vlist_node;
-        new_vlist_node.value = value; new_vlist_node.nxt = nxt_vlist_ptr;
-        cur_vlist_node.nxt = vlist_fstream.allocate(new_vlist_node);
-        vlist_fstream.write(cur_vlist_node, cur_vlist_ptr);
-        return;
-      }
-      cur_vlist_node = nxt_vlist_node;
-      cur_vlist_ptr = nxt_vlist_ptr;
-      nxt_vlist_ptr = cur_vlist_node.nxt;
-    }
-    VlistNode new_vlist_node;
-    new_vlist_node.value = value; // new_vlist_node.nxt = nxt_vlist_ptr = "nullptr"
-    cur_vlist_node.nxt = vlist_fstream.allocate(new_vlist_node);
-    vlist_fstream.write(cur_vlist_node, cur_vlist_ptr);
     return;
   }
 
@@ -145,14 +119,12 @@ void StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::insert(
     }
     cur_inner_node.keys[pos] = key;
     cur_inner_node.vlist_ptrs[pos] = vlist_fstream.allocate(vlist_begin_node);
-    vlist_begin_cache.insert(key, cur_inner_node.vlist_ptrs[pos]);
     inner_fstream.write(cur_inner_node, cur_inner_ptr);
     // node_size modified. Start maintenance.
     maintain_size(cur_inner_ptr, cur_inner_node);
     return;
   }
   // assert(key == cur_inner_node.keys[pos]);
-  vlist_begin_cache.insert(key, cur_inner_node.vlist_ptrs[pos]);
   VlistPtr cur_vlist_ptr = cur_inner_node.vlist_ptrs[pos];
   VlistNode cur_vlist_node; vlist_fstream.read(cur_vlist_node, cur_vlist_ptr);
   VlistPtr nxt_vlist_ptr = cur_vlist_node.nxt;
@@ -181,38 +153,6 @@ template<class KeyType, class ValueType, size_t degree, size_t capacity>
 void StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::erase(
   const KeyType &key, const ValueType &value) {
   if(root_ptr.isnull()) return;
-  if(auto [cur_vlist_ptr, is_succeed] = vlist_begin_cache.find(key); is_succeed) {
-    // todo: write the duplicated code as a function.
-    VlistNode cur_vlist_node; vlist_fstream.read(cur_vlist_node, cur_vlist_ptr);
-    VlistPtr nxt_vlist_ptr = cur_vlist_node.nxt;
-    VlistNode nxt_vlist_node;
-    while(!nxt_vlist_ptr.isnull()) {
-      vlist_fstream.read(nxt_vlist_node, nxt_vlist_ptr);
-      if(value == nxt_vlist_node.value) {
-        cur_vlist_node.nxt = nxt_vlist_node.nxt;
-        vlist_fstream.write(cur_vlist_node, cur_vlist_ptr);
-        vlist_fstream.free(nxt_vlist_ptr);
-        /* In order to avoid merging / averaging operations and their time complexty cost,
-         * Here we choose not to discard this key,
-         * at the cost of more space occupied (commonly doesn't matter) and B-plus Tree (for now) layers.
-         * But, if degree is big enough, the latter drawback will also be tiny.
-        if(cur_vlist_ptr == cur_inner_node.vlist_ptrs[pos] && cur_vlist_node.nxt.isnull()) {
-          // discard this key.
-          ...
-          // maintain_size for cur_inner_node with a size shrink
-          maintain_size(..., ..., ..., cur_inner_node);
-        }
-        */
-        return;
-      }
-      if(value < nxt_vlist_node.value) return; // value not exist
-      cur_vlist_node = nxt_vlist_node;
-      cur_vlist_ptr = nxt_vlist_ptr;
-      nxt_vlist_ptr = cur_vlist_node.nxt;
-    }
-    // if code reaches here, it means: value too big.
-    return;
-  }
   InnerPtr cur_inner_ptr = root_ptr, parent_ptr; // parent_ptr = root_ptr.parent_ptr = "nullptr"
   InnerNode cur_inner_node; inner_fstream.read(cur_inner_node, cur_inner_ptr);
   if(key > cur_inner_node.high_key) return; // key too large
@@ -238,7 +178,6 @@ void StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::erase(
   }
   if(key < cur_inner_node.keys[pos]) return; // key not exist
   // assert(key == cur_inner_node.keys[pos])
-  vlist_begin_cache.insert(key, cur_inner_node.vlist_ptrs[pos]);
   VlistPtr cur_vlist_ptr = cur_inner_node.vlist_ptrs[pos];
   VlistNode cur_vlist_node; vlist_fstream.read(cur_vlist_node, cur_vlist_ptr);
   VlistPtr nxt_vlist_ptr = cur_vlist_node.nxt;
@@ -275,20 +214,6 @@ std::vector<ValueType> StarryPurple::Fmultimap<KeyType, ValueType, degree, capac
   const KeyType &key) {
   std::vector<ValueType> res;
   if(root_ptr.isnull()) return res;
-  if(auto [cur_vlist_ptr, is_succeed] = vlist_begin_cache.find(key); is_succeed) {
-    // todo: write the duplicated code as a function.
-    VlistNode cur_vlist_node; vlist_fstream.read(cur_vlist_node, cur_vlist_ptr);
-    VlistPtr nxt_vlist_ptr = cur_vlist_node.nxt;
-    VlistNode nxt_vlist_node;
-    while(!nxt_vlist_ptr.isnull()) {
-      vlist_fstream.read(nxt_vlist_node, nxt_vlist_ptr);
-      res.push_back(nxt_vlist_node.value);
-      cur_vlist_node = nxt_vlist_node;
-      cur_vlist_ptr = nxt_vlist_ptr;
-      nxt_vlist_ptr = cur_vlist_node.nxt;
-    }
-    return res;
-  }
   InnerPtr cur_inner_ptr = root_ptr, parent_ptr; // parent_ptr = root_node.parent_ptr = "nullptr"
   InnerNode cur_inner_node; inner_fstream.read(cur_inner_node, cur_inner_ptr);
   if(key > cur_inner_node.high_key) return res; // key too large
@@ -314,7 +239,6 @@ std::vector<ValueType> StarryPurple::Fmultimap<KeyType, ValueType, degree, capac
   }
   if(key < cur_inner_node.keys[pos]) return res; // key not exist
   // assert(key == cur_inner_node.keys[pos])
-  vlist_begin_cache.insert(key, cur_inner_node.vlist_ptrs[pos]);
   VlistPtr cur_vlist_ptr = cur_inner_node.vlist_ptrs[pos];
   VlistNode cur_vlist_node; vlist_fstream.read(cur_vlist_node, cur_vlist_ptr);
   VlistPtr nxt_vlist_ptr = cur_vlist_node.nxt;
@@ -424,7 +348,7 @@ StarryPurple::Fstack<Type, capacity>::~Fstack() {
 }
 
 template<class Type, size_t capacity>
-void StarryPurple::Fstack<Type, capacity>::open(const filenameType &filename) {
+void StarryPurple::Fstack<Type, capacity>::open(const std::string &filename) {
   is_open = true;
   bool file_exist = stack_fstream.open(filename);
   if(file_exist) {
@@ -499,7 +423,7 @@ StarryPurple::ConstStr<capacity>::ConstStr(const std::string &str) {
 template<int capacity>
 StarryPurple::ConstStr<capacity>::ConstStr(const ConstStr &other) {
   len = other.len;
-  strcpy(storage, other.storage, len + 1);
+  strcpy(storage, other.storage);
 }
 
 template<int capacity>

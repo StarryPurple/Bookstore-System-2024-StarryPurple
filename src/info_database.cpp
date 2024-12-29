@@ -34,7 +34,7 @@ void BookStore::UserStack::user_logout() {
   u_stack.pop();
 }
 
-void BookStore::UserStack::user_select_book(const BookInfoType &ISBN) {
+void BookStore::UserStack::user_select_book(const ISBNType &ISBN) {
   if(u_stack.empty())
     throw StarryPurple::ValidatorException();
   u_stack.top().has_selected_book = true;
@@ -53,7 +53,7 @@ BookStore::LoggedUsrType
 }
 
 const BookStore::UserPrivilege
-&BookStore::UserStack::active_privilege() {
+BookStore::UserStack::active_privilege() {
   if(u_stack.empty())
     return UserPrivilege(0);
   return u_stack.top().privilege;

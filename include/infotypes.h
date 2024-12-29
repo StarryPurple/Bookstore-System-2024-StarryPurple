@@ -1,13 +1,10 @@
 #ifndef INFO_TYPES_H
 #define INFO_TYPES_H
 
-#include "info_database.h"
-
 #include "utilities.h"
 
 namespace BookStore {
 
-using StarryPurple::filenameType;
 using StarryPurple::ConstStr;
 using StarryPurple::expect;
 
@@ -46,7 +43,7 @@ using LogPtr = StarryPurple::Fpointer<cMaxFlowSize + 3>; // accord to log databa
 
 class UserPrivilege {
 private:
-  const bool pri_1 = false, pri_2 = false, pri_3 = false;
+  bool pri_1 = false, pri_2 = false, pri_3 = false;
 public:
   UserPrivilege() = default;
   explicit UserPrivilege(int privilege);
@@ -70,6 +67,8 @@ public:
   BookType(const ISBNType &ISBN);
   ~BookType() = default;
   void print() const;
+  bool operator==(const BookType &other) const;
+  bool operator!=(const BookType &other) const;
   bool operator<(const BookType &other) const;
   bool operator>(const BookType &other) const;
   bool operator<=(const BookType &other) const;
@@ -85,13 +84,20 @@ class UserType {
 private:
   UserInfoType ID, username;
   PasswordType passwd;
-  const UserPrivilege privilege;
+  UserPrivilege privilege;
 public:
   UserType() = default;
   UserType(
     const UserInfoType &userID, const PasswordType &password,
     int user_privilege, const UserInfoType &name);
   ~UserType() = default;
+  bool operator==(const UserType &other) const;
+  bool operator!=(const UserType &other) const;
+  bool operator<(const UserType &other) const;
+  bool operator>(const UserType &other) const;
+  bool operator<=(const UserType &other) const;
+  bool operator>=(const UserType &other) const;
+
 };
 
 
@@ -99,13 +105,22 @@ class LogType {
   friend LogManager; // used in "show finance"
   friend LogDatabase;
 private:
+  size_t id;
   PriceType total_income, total_expenditure;
   LogDescriptionType log_description;
 public:
+  static size_t log_count;
   LogType() = default;
-  LogType(const PriceType &history_income, const PriceType &history_expenditure,
-  const LogDescriptionType &description);
+  LogType(
+    const PriceType &history_income, const PriceType &history_expenditure,
+    const LogDescriptionType &description);
   ~LogType() = default;
+  bool operator==(const LogType &other) const;
+  bool operator!=(const LogType &other) const;
+  bool operator<(const LogType &other) const;
+  bool operator>(const LogType &other) const;
+  bool operator<=(const LogType &other) const;
+  bool operator>=(const LogType &other) const;
 };
 
 } // namespace BookStore

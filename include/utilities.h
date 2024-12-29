@@ -34,6 +34,7 @@ private:
     size_t node_size = 0;
     KeyType keys[degree + 1]{};
     InnerPtr inner_ptrs[degree + 1]{};
+    VlistPtr vlist_ptrs[degree + 1]{};
   };
   struct VlistNode {
     // todo: add this_ptr
@@ -44,11 +45,10 @@ private:
   VlistFstream vlist_fstream;
   bool is_open = false;
   InnerPtr root_ptr; // parent_ptr of root_node is "nullptr"
-  LRUCache<KeyType, VlistPtr, 20> vlist_begin_cache;
 public:
   Fmultimap() = default;
   ~Fmultimap();
-  bool open(const filenameType &prefix);
+  bool open(const std::string &prefix);
   void close();
 
   void insert(const KeyType &key, const ValueType &value);
@@ -86,11 +86,11 @@ template<class Type, size_t capacity>
 class Fstack {
   using ListNodePtr = Fpointer<capacity>;
   struct ListNodeType {
-    Type val;
-    ListNodePtr pre;
+    Type val{};
+    ListNodePtr pre{};
   };
   struct InfoType {
-    ListNodeType back_node{};
+    ListNodeType back_node;
     ListNodePtr back_ptr{};
     size_t current_size = 0;
     InfoType();
@@ -103,7 +103,7 @@ private:
 public:
   Fstack() = default;
   ~Fstack();
-  void open(const filenameType &filename);
+  void open(const std::string &filename);
   void close();
   void push(const Type &value);
   void pop();

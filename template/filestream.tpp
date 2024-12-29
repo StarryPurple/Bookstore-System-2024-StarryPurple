@@ -49,7 +49,7 @@ StarryPurple::Fstream<StorageType, InfoType, capacity>::~Fstream() {
 }
 
 template<class StorageType, class InfoType, size_t capacity>
-bool StarryPurple::Fstream<StorageType, InfoType, capacity>::open(const filenameType &filename) {
+bool StarryPurple::Fstream<StorageType, InfoType, capacity>::open(const std::string &filename) {
   filename_ = filename;
   if(file_.is_open())
     throw FileExceptions("Opening unclosed file \"" + filename + "\"" );

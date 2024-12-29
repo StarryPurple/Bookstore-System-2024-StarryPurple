@@ -1,7 +1,6 @@
 #ifndef INFO_MANAGER_H
 #define INFO_MANAGER_H
 
-#include "infotypes.h"
 #include "info_database.h"
 
 namespace BookStore {
@@ -23,7 +22,7 @@ private:
   UserStack user_stack;
   UserDatabase user_database;
   bool is_running = false;
-  void open(const filenameType &prefix);
+  void open(const std::string &prefix);
   void close();
   void login(const UserInfoType &userID, const PasswordType &password); // command "su [userID] [password]"
   void login(const UserInfoType &userID); // command "su [userID]"
@@ -49,7 +48,7 @@ private:
   BookDatabase book_database;
   UserStack *user_stack_ptr;
   bool is_running = false;
-  void open(const filenameType &prefix);
+  void open(const std::string &prefix);
   void close();
   void select_book(const ISBNType &ISBN); // command "select"
   void list_all(); // command "show" with no augments
@@ -77,7 +76,7 @@ private:
   LogDatabase log_database;
   UserStack *user_stack_ptr;
   bool is_running = false;
-  void open(const filenameType &prefix);
+  void open(const std::string &prefix);
   void close();
   // Common:
   //   record everyone's call for all commands:

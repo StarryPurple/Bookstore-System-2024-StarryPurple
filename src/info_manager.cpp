@@ -7,7 +7,7 @@ BookStore::UserManager::~UserManager() {
   if(is_running) close();
 }
 
-void BookStore::UserManager::open(const filenameType &prefix) {
+void BookStore::UserManager::open(const std::string &prefix) {
   if(is_running) close();
   user_stack.open(prefix + "_stack");
   user_database.open(prefix + "_database");
@@ -103,7 +103,7 @@ BookStore::BookManager::~BookManager() {
   if(is_running) close();
 }
 
-void BookStore::BookManager::open(const filenameType &prefix) {
+void BookStore::BookManager::open(const std::string &prefix) {
   if(is_running) close();
   book_database.open(prefix + "_database");
   is_running = true;
@@ -191,7 +191,7 @@ BookStore::LogType BookStore::BookManager::restock(
   expect(user_stack_ptr->active_user().has_selected_book).toBe(true);
   expect(quantity).Not().lesserEqual(0);
   expect(total_cost).Not().lesserEqual(0.0);
-  BookInfoType ISBN = user_stack_ptr->active_user().ISBN_selected;
+  ISBNType ISBN = user_stack_ptr->active_user().ISBN_selected;
   std::vector<BookType> book_vector = book_database.ISBN_map[ISBN];
   BookType book = book_vector[0];
   book_database.book_change_storage(book, quantity);
@@ -214,7 +214,7 @@ void BookStore::BookManager::modify_book(
   const BookInfoType &keyword_list, const PriceType &price, bool is_modified[5]) {
   expect(user_stack_ptr->active_privilege()).greaterEqual(UserPrivilege(3));
   expect(user_stack_ptr->active_user().has_selected_book).toBe(true);
-  BookInfoType old_ISBN = user_stack_ptr->active_user().ISBN_selected;
+  ISBNType old_ISBN = user_stack_ptr->active_user().ISBN_selected;
   std::vector<BookType> book_vector = book_database.ISBN_map[old_ISBN];
   assert(book_vector.size() == 1); // Needed?
   BookType old_book = book_vector[0];
@@ -233,7 +233,7 @@ BookStore::LogManager::~LogManager() {
   if(is_running) close();
 }
 
-void BookStore::LogManager::open(const filenameType &prefix) {
+void BookStore::LogManager::open(const std::string &prefix) {
   if(is_running) close();
   log_database.open(prefix + "_database");
   is_running = true;

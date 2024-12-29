@@ -207,7 +207,7 @@ void BookStore::CommandManager::command_show_report(const ArglistType &argv) {
   else throw StarryPurple::ValidatorException();
 }
 
-void BookStore::CommandManager::open(const filenameType &prefix) {
+void BookStore::CommandManager::open(const std::string &prefix) {
   if(is_running) close();
   user_manager.open(prefix + "_user");
   book_manager.open(prefix + "_book");
@@ -243,10 +243,12 @@ BookStore::CommandManager::command_splitter(const std::string &command) {
       }
     } else arg += ch;
   }
+  if(!arg.empty()) argv.push_back(arg);
   return argv;
 }
 
-void BookStore::CommandManager::command_list_reader(const filenameType &prefix, const filenameType &directory) {
+void BookStore::CommandManager::command_list_reader(const std::string &prefix, const std::string &directory) {
+  LogType::log_count = 0;
   open(directory + prefix);
   std::string command;
   while(std::getline(std::cin, command)) {
