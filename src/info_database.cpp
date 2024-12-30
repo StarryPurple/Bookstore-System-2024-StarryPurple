@@ -142,6 +142,7 @@ void BookStore::BookDatabase::close() {
 
 std::vector<BookStore::BookInfoType> BookStore::BookDatabase::keyword_splitter(
   const BookInfoType &keyword_list) {
+  // todo: "a||b" is invalid. fix it.
   std::vector<BookInfoType> keyword_vector;
   std::string keyword;
   for(int i = 0; i < keyword_list.length(); ++i) {

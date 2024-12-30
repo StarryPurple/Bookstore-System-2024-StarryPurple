@@ -192,7 +192,9 @@ void BookStore::CommandManager::command_restock(const ArglistType &argv) {
   try {
     quantity = std::stoi(argv[1]); // read in restriction: [Quantity] <= MAXINT
     price = std::stod(argv[2]);
-  } catch(...) {
+  } catch(std::out_of_range &) {
+    // std::invalid_argument won't be thrown for the regex check.
+    // But it may take "1.1.1" as "1.1". sad.
     throw StarryPurple::ValidatorException();
     return;
   }
@@ -300,9 +302,9 @@ void BookStore::CommandManager::command_list_reader(const std::string &prefix, c
       else throw StarryPurple::ValidatorException();
     } catch(StarryPurple::ValidatorException &) {
       std::cout << "Invalid\n";
-    }/* catch(std::out_of_range &) {
+    } catch(std::out_of_range &) {
       std::cout << "Debug fail";
-    }*/
+    }
   }
   close();
 }
