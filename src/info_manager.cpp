@@ -193,6 +193,7 @@ BookStore::LogType BookStore::BookManager::restock(
   expect(total_cost).Not().lesserEqual(0.0);
   ISBNType ISBN = user_stack_ptr->active_user().ISBN_selected;
   std::vector<BookType> book_vector = book_database.ISBN_map[ISBN];
+  expect(book_vector.size()).toBe(1);
   BookType book = book_vector[0];
   book_database.book_change_storage(book, quantity);
   return LogType(0, total_cost, LogDescriptionType("log command import"));
@@ -217,6 +218,7 @@ void BookStore::BookManager::modify_book(
   ISBNType old_ISBN = user_stack_ptr->active_user().ISBN_selected;
   std::vector<BookType> book_vector = book_database.ISBN_map[old_ISBN];
   // assert(book_vector.size() == 1); // Needed?
+  expect(book_vector.size()).toBe(1);
   BookType old_book = book_vector[0];
   BookType modified_book;
   modified_book.isbn = ISBN; modified_book.bookname = bookname;
@@ -252,6 +254,7 @@ void BookStore::LogManager::close() {
 
 void BookStore::LogManager::show_deal_history(const LogCountType &count) {
   expect(user_stack_ptr->active_privilege()).greaterEqual(UserPrivilege(7));
+  expect(count).greaterEqual(0);
   expect(count).lesserEqual(log_database.info.finance_log_count);
   if(count == 0) {
     std::cout << '\n';
