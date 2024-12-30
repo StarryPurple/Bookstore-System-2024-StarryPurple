@@ -259,55 +259,55 @@ void BookStore::CommandManager::command_list_reader(const std::string &prefix, c
         expect(argv.size()).toBe(1);
         break;
       }
+      if(argv[0] == "su") {
+        command_login(argv);
+        continue;
+      }
+      if(argv[0] == "logout") {
+        command_logout(argv);
+        continue;
+      }
+      if(argv[0] == "register") {
+        command_user_register(argv);
+        continue;
+      }
+      if(argv[0] == "passwd") {
+        command_change_password(argv);
+        continue;
+      }
+      if(argv[0] == "useradd") {
+        command_user_add(argv);
+        continue;
+      }
+      if(argv[0] == "delete") {
+        command_user_unregister(argv);
+        continue;
+      }
       try {
-        if(argv[0] == "su") {
-          command_login(argv);
+        if(argv[0] == "show") {
+          if(argv[1] == "finance") {
+            command_show_finance(argv);
+            continue;
+          }
+          else {
+            command_list_book(argv);
+            continue;
+          }
+        }
+        if(argv[0] == "buy") {
+          command_sellout(argv);
           continue;
         }
-        if(argv[0] == "logout") {
-          command_logout(argv);
+        if(argv[0] == "select") {
+          command_select_book(argv);
           continue;
         }
-        if(argv[0] == "register") {
-          command_user_register(argv);
+        if(argv[0] == "modify") {
+          command_modify_book(argv);
           continue;
         }
-        if(argv[0] == "passwd") {
-          command_change_password(argv);
-          continue;
-        }
-        if(argv[0] == "useradd") {
-          command_user_add(argv);
-          continue;
-        }
-        if(argv[0] == "delete") {
-          command_user_unregister(argv);
-          continue;
-        }
-      } catch(std::runtime_error &) {
+      } catch(std::out_of_range &) {
         std::cout << "Wrong\n";
-        continue;
-      }
-      if(argv[0] == "show") {
-        if(argv[1] == "finance") {
-          command_show_finance(argv);
-          continue;
-        }
-        else {
-          command_list_book(argv);
-          continue;
-        }
-      }
-      if(argv[0] == "buy") {
-        command_sellout(argv);
-        continue;
-      }
-      if(argv[0] == "select") {
-        command_select_book(argv);
-        continue;
-      }
-      if(argv[0] == "modify") {
-        command_modify_book(argv);
         continue;
       }
       if(argv[0] == "import") {
