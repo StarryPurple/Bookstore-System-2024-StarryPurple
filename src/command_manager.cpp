@@ -301,15 +301,19 @@ void BookStore::CommandManager::command_list_reader(const std::string &prefix, c
           command_select_book(argv);
           continue;
         }
+      try {
         if(argv[0] == "modify") {
           command_modify_book(argv);
           continue;
         }
+      } catch(std::out_of_range &) {
+        std::cout << "Wrong\n";
+        continue;
+      }
         if(argv[0] == "import") {
           command_restock(argv);
           continue;
         }
-      try {
         if(argv[0] == "log") {
           command_show_log(argv);
           continue;
@@ -318,10 +322,6 @@ void BookStore::CommandManager::command_list_reader(const std::string &prefix, c
           command_show_report(argv);
           continue;
         }
-      } catch(std::out_of_range &) {
-        std::cout << "Wrong\n";
-        continue;
-      }
       throw StarryPurple::ValidatorException();
     } catch(StarryPurple::ValidatorException &) {
       std::cout << "Invalid\n";
