@@ -301,7 +301,6 @@ void BookStore::CommandManager::command_list_reader(const std::string &prefix, c
           command_select_book(argv);
           continue;
         }
-      try {
         if(argv[0] == "modify") {
           command_modify_book(argv);
           continue;
@@ -310,6 +309,7 @@ void BookStore::CommandManager::command_list_reader(const std::string &prefix, c
           command_restock(argv);
           continue;
         }
+      try {
         if(argv[0] == "log") {
           command_show_log(argv);
           continue;
