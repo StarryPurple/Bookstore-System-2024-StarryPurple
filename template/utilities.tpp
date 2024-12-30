@@ -132,6 +132,28 @@ void StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::insert(
   while(!nxt_vlist_ptr.isnull()) {
     vlist_fstream.read(nxt_vlist_node, nxt_vlist_ptr);
 
+    if(value > nxt_vlist_node.value[nxt_vlist_node.node_size - 1] && nxt_vlist_node.nxt.isnull()) {
+      ++nxt_vlist_node.node_size;
+      nxt_vlist_node.value[nxt_vlist_node.node_size - 1] = value;
+      vlist_fstream.write(nxt_vlist_node, nxt_vlist_ptr);
+
+      if(nxt_vlist_node.node_size == degree) {
+        VlistNode new_vlist_node;
+        int left_size = nxt_vlist_node.node_size / 2, right_size = nxt_vlist_node.node_size - left_size;
+        ValueType empty_value;
+        for(int i = 0; i < right_size; ++i) {
+          new_vlist_node.value[i] = nxt_vlist_node.value[left_size + i];
+          nxt_vlist_node.value[left_size + i] = empty_value;
+        }
+        nxt_vlist_node.node_size = left_size; new_vlist_node.node_size = right_size;
+        new_vlist_node.nxt = nxt_vlist_node.nxt; // = "nullptr"
+        nxt_vlist_node.nxt = vlist_fstream.allocate(new_vlist_node);
+        vlist_fstream.write(nxt_vlist_node, nxt_vlist_ptr);
+      }
+
+      return;
+    }
+
     if(value > nxt_vlist_node.value[nxt_vlist_node.node_size - 1]) {
       cur_vlist_node = nxt_vlist_node;
       cur_vlist_ptr = nxt_vlist_ptr;
