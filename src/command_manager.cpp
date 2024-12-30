@@ -185,8 +185,15 @@ void BookStore::CommandManager::command_restock(const ArglistType &argv) {
   expect(argv.size()).toBe(3);
   expect(argv[1]).toBeConsistedOf(digit_alphabet);
   expect(argv[2]).toBeConsistedOf(digit_with_dot_alphabet);
-  QuantityType quantity = std::stoll(argv[1]);
-  PriceType price = std::stod(argv[2]);
+  QuantityType quantity = 0;
+  PriceType price = 0.0;
+  try {
+    quantity = std::stoll(argv[1]);
+    price = std::stod(argv[2]);
+  } catch(std::out_of_range &) {
+    std::cout << "Wrong Input\n";
+    return;
+  }
   LogType log = book_manager.restock(quantity, price);
   log_manager.add_log(log, 1);
 }
@@ -255,74 +262,40 @@ void BookStore::CommandManager::command_list_reader(const std::string &prefix, c
     ArglistType argv = command_splitter(command);
     if(argv.empty()) continue;
     try {
-        if(argv[0] == "quit" || argv[0] == "exit") {
-          expect(argv.size()).toBe(1);
-          break;
-        }
-        if(argv[0] == "su") {
-          command_login(argv);
-          continue;
-        }
-        if(argv[0] == "logout") {
-          command_logout(argv);
-          continue;
-        }
-        if(argv[0] == "register") {
-          command_user_register(argv);
-          continue;
-        }
-        if(argv[0] == "passwd") {
-          command_change_password(argv);
-          continue;
-        }
-        if(argv[0] == "useradd") {
-          command_user_add(argv);
-          continue;
-        }
-        if(argv[0] == "delete") {
-          command_user_unregister(argv);
-          continue;
-        }
-        if(argv[0] == "show") {
-          if(argv[1] == "finance") {
-            command_show_finance(argv);
-            continue;
-          }
-          else {
-            command_list_book(argv);
-            continue;
-          }
-        }
-        if(argv[0] == "buy") {
-          command_sellout(argv);
-          continue;
-        }
-        if(argv[0] == "select") {
-          command_select_book(argv);
-          continue;
-        }
-        if(argv[0] == "modify") {
-          command_modify_book(argv);
-          continue;
-        }
-      try {
-        if(argv[0] == "import") {
-          command_restock(argv);
-          continue;
-        }
-      } catch(std::out_of_range &) {
-        std::cout << "Wrong\n";
-        continue;
+      if(argv[0] == "quit" || argv[0] == "exit") {
+        // “quit”, "exit"
+        expect(argv.size()).toBe(1);
+        break;
       }
-        if(argv[0] == "log") {
-          command_show_log(argv);
-          continue;
-        }
-        if(argv[0] == "report") {
-          command_show_report(argv);
-          continue;
-        }
-      throw StarryPurple::ValidatorException();
+      if(argv[0] == "su")
+        command_login(argv);
+      else if(argv[0] == "logout")
+        command_logout(argv);
+      else if(argv[0] == "register")
+        command_user_register(argv);
+      else if(argv[0] == "passwd")
+        command_change_password(argv);
+      else if(argv[0] == "useradd")
+        command_user_add(argv);
+      else if(argv[0] == "delete")
+        command_user_unregister(argv);
+      else if(argv[0] == "show") {
+        if(argv[1] == "finance")
+          command_show_finance(argv);
+        else command_list_book(argv);
+      } else if(argv[0] == "buy")
+        command_sellout(argv);
+      else if(argv[0] == "select")
+        command_select_book(argv);
+      else if(argv[0] == "modify")
+        command_modify_book(argv);
+      else if(argv[0] == "import")
+        command_restock(argv);
+      else if(argv[0] == "log")
+        command_show_log(argv);
+      else if(argv[0] == "report")
+        command_show_report(argv);
+      else throw StarryPurple::ValidatorException();
     } catch(StarryPurple::ValidatorException &) {
       std::cout << "Invalid\n";
     }/* catch(std::out_of_range &) {
