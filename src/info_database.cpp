@@ -175,9 +175,14 @@ void BookStore::BookDatabase::book_modify_info(
   else expect(ISBN_map[modified_book.isbn].size()).toBe(0);
   if(!is_modified[1]) modified_book.bookname = old_book.bookname;
   if(!is_modified[2]) modified_book.author = old_book.author;
-  if(!is_modified[3])
-    modified_book.keyword_list = old_book.keyword_list;
+  if(!is_modified[3]) modified_book.keyword_list = old_book.keyword_list;
   else {
+    for(int i = 0; i < modified_book.keyword_list.length(); ++i)
+      if(modified_book.keyword_list[i] == '|')
+        if(i == 0 || i == modified_book.keyword_list.length() - 1
+          || modified_book.keyword_list[i - 1] == '|'
+          || modified_book.keyword_list[i + 1] == '|')
+          throw StarryPurple::ValidatorException();
     std::vector<BookInfoType> keyword_vector = keyword_splitter(modified_book.keyword_list);
     std::set<BookInfoType> keyword_set;
     for(const auto &keyword: keyword_vector)
