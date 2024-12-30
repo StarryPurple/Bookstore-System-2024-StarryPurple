@@ -191,7 +191,7 @@ void BookStore::CommandManager::command_restock(const ArglistType &argv) {
     quantity = std::stoll(argv[1]);
     price = std::stod(argv[2]);
   } catch(std::out_of_range &) {
-    std::cout << "Wrong Input\n";
+    throw std::runtime_error("Dude...");
     return;
   }
   LogType log = book_manager.restock(quantity, price);
