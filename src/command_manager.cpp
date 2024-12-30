@@ -185,13 +185,15 @@ void BookStore::CommandManager::command_restock(const ArglistType &argv) {
   expect(argv.size()).toBe(3);
   expect(argv[1]).toBeConsistedOf(digit_alphabet);
   expect(argv[2]).toBeConsistedOf(digit_with_dot_alphabet);
+  expect(argv[1].length()).lesserEqual(10);
+  expect(argv[2].length()).lesserEqual(13);
   QuantityType quantity = 0;
   PriceType price = 0.0;
   try {
-    quantity = std::stoll(argv[1]);
+    quantity = std::stoi(argv[1]); // read in restriction: [Quantity] <= MAXINT
     price = std::stod(argv[2]);
   } catch(std::out_of_range &) {
-    throw std::runtime_error("Dude...");
+    throw StarryPurple::ValidatorException();
     return;
   }
   LogType log = book_manager.restock(quantity, price);
