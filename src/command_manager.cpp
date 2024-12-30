@@ -293,8 +293,13 @@ void BookStore::CommandManager::command_list_reader(const std::string &prefix, c
         command_select_book(argv);
       else if(argv[0] == "modify")
         command_modify_book(argv);
-      else if(argv[0] == "import")
-        command_restock(argv);
+      else if(argv[0] == "import") {
+        try {
+          command_restock(argv);
+        } catch(std::out_of_range &) {
+          std::cout << "Huh? How did you get here?\n";
+        }
+      }
       else if(argv[0] == "log")
         command_show_log(argv);
       else if(argv[0] == "report")
@@ -302,9 +307,9 @@ void BookStore::CommandManager::command_list_reader(const std::string &prefix, c
       else throw StarryPurple::ValidatorException();
     } catch(StarryPurple::ValidatorException &) {
       std::cout << "Invalid\n";
-    } catch(std::out_of_range &) {
+    }/* catch(std::out_of_range &) {
       std::cout << "Debug fail";
-    }
+    }*/
   }
   close();
 }
