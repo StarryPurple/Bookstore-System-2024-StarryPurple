@@ -137,7 +137,7 @@ void StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::insert(
       nxt_vlist_node.value[nxt_vlist_node.node_size - 1] = value;
       vlist_fstream.write(nxt_vlist_node, nxt_vlist_ptr);
 
-      if(nxt_vlist_node.node_size == degree) {
+      if(nxt_vlist_node.node_size == degree * 2) {
         VlistNode new_vlist_node;
         int left_size = nxt_vlist_node.node_size / 2, right_size = nxt_vlist_node.node_size - left_size;
         ValueType empty_value;
@@ -174,7 +174,7 @@ void StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::insert(
     nxt_vlist_node.value[l] = value;
     vlist_fstream.write(nxt_vlist_node, nxt_vlist_ptr);
 
-    if(nxt_vlist_node.node_size == degree) {
+    if(nxt_vlist_node.node_size == degree * 2) {
       VlistNode new_vlist_node;
       int left_size = nxt_vlist_node.node_size / 2, right_size = nxt_vlist_node.node_size - left_size;
       ValueType empty_value;
@@ -254,9 +254,9 @@ void StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::erase(
     nxt_vlist_node.value[nxt_vlist_node.node_size] = ValueType();
     vlist_fstream.write(nxt_vlist_node, nxt_vlist_ptr);
 
-    if(nxt_vlist_node.node_size < degree / 2) {
+    if(nxt_vlist_node.node_size < degree) {
       if(cur_vlist_ptr != cur_inner_node.vlist_ptrs[pos]) {
-        if(cur_vlist_node.node_size > degree / 2) {
+        if(cur_vlist_node.node_size > degree) {
           int total_size = cur_vlist_node.node_size + nxt_vlist_node.node_size;
           int left_size = total_size / 2, right_size = total_size - left_size;
           ValueType empty_value;
@@ -285,7 +285,7 @@ void StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::erase(
         cur_vlist_ptr = nxt_vlist_ptr;
         nxt_vlist_ptr = cur_vlist_node.nxt;
         vlist_fstream.read(nxt_vlist_node, nxt_vlist_ptr);
-        if(nxt_vlist_node.node_size > degree / 2) {
+        if(nxt_vlist_node.node_size > degree) {
           int total_size = cur_vlist_node.node_size + nxt_vlist_node.node_size;
           int left_size = total_size / 2, right_size = total_size - left_size;
           ValueType empty_value;
