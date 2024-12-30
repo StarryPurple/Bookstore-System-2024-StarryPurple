@@ -121,7 +121,13 @@ void BookStore::CommandManager::command_sellout(const ArglistType &argv) {
   expect(argv.size()).toBe(3);
   expect(argv[1]).toBeConsistedOf(ascii_alphabet);
   expect(argv[2]).toBeConsistedOf(digit_alphabet);
-  QuantityType quantity = std::stoll(argv[2]);
+  QuantityType quantity = 0;
+  try {
+    quantity = std::stoi(argv[2]);
+  } catch(std::out_of_range &) {
+    throw StarryPurple::ValidatorException();
+    return;
+  }
   LogType log = book_manager.sellout(ISBNType(argv[1]), quantity);
 
   log_manager.add_log(log, 1);
@@ -293,13 +299,8 @@ void BookStore::CommandManager::command_list_reader(const std::string &prefix, c
         command_select_book(argv);
       else if(argv[0] == "modify")
         command_modify_book(argv);
-      else if(argv[0] == "import") {
-        try {
-          command_restock(argv);
-        } catch(std::out_of_range &) {
-          std::cout << "Huh? How did you get here?\n";
-        }
-      }
+      else if(argv[0] == "import")
+        command_restock(argv);
       else if(argv[0] == "log")
         command_show_log(argv);
       else if(argv[0] == "report")
