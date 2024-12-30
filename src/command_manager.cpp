@@ -182,22 +182,22 @@ void BookStore::CommandManager::command_modify_book(const ArglistType &argv) {
 
 void BookStore::CommandManager::command_restock(const ArglistType &argv) {
   // “import [Quantity] [TotalCost]”
-  expect(argv.size()).toBe(3);
-  expect(argv[1]).toBeConsistedOf(digit_alphabet);
-  expect(argv[2]).toBeConsistedOf(digit_with_dot_alphabet);
-  expect(argv[1].length()).lesserEqual(10);
-  expect(argv[2].length()).lesserEqual(13);
-  QuantityType quantity = 0;
-  PriceType price = 0.0;
   try {
+    expect(argv.size()).toBe(3);
+    expect(argv[1]).toBeConsistedOf(digit_alphabet);
+    expect(argv[2]).toBeConsistedOf(digit_with_dot_alphabet);
+    expect(argv[1].length()).lesserEqual(10);
+    expect(argv[2].length()).lesserEqual(13);
+    QuantityType quantity = 0;
+    PriceType price = 0.0;
     quantity = std::stoi(argv[1]); // read in restriction: [Quantity] <= MAXINT
     price = std::stod(argv[2]);
+    LogType log = book_manager.restock(quantity, price);
+    log_manager.add_log(log, 1);
   } catch(std::out_of_range &) {
     throw StarryPurple::ValidatorException();
     return;
   }
-  LogType log = book_manager.restock(quantity, price);
-  log_manager.add_log(log, 1);
 }
 
 void BookStore::CommandManager::command_show_log(const ArglistType &argv) {
