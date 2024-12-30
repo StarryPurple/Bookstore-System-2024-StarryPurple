@@ -28,12 +28,22 @@ void BookStore::UserStack::clear() {
 }
 
 BookStore::LoggedUserType::LoggedUserType(const UserType &user)
-  : user_id(user.ID), privilege(user.privilege) {}
+  : user_id(user.user_id), username(user.username), privilege(user.privilege) {}
+
+std::string BookStore::LoggedUserType::user_identity_str() const {
+  std::string res = "\"";
+  if(privilege.pri_3) res += "Keeper";
+  else if(privilege.pri_2) res += "Worker";
+  else if(privilege.pri_1) res += "Client";
+  else res += "Tourist";
+  res += "\" " + username.to_str() + " (id: " + user_id.to_str() + ")";
+  return res;
+}
 
 
 void BookStore::UserStack::user_login(const UserType &user) {
   u_stack.push_back(LoggedUserType(user));
-  logged_set.insert(user.ID);
+  logged_set.insert(user.user_id);
 }
 
 void BookStore::UserStack::user_logout() {
@@ -63,10 +73,9 @@ BookStore::LoggedUserType
 
 const BookStore::UserPrivilege
 BookStore::UserStack::active_privilege() {
-  if(u_stack.empty())
-    return UserPrivilege(0);
-  return u_stack.back().privilege;
+  return active_user().privilege;
 }
+
 
 void BookStore::UserStack::update_ISBN(const ISBNType &old_ISBN, const ISBNType &modified_ISBN) {
   for(auto &logged_user: u_stack)
@@ -90,7 +99,7 @@ void BookStore::UserDatabase::open(const std::string &prefix) {
     user_register(
       UserType(
         UserInfoType("root"), PasswordType("sjtu"),
-        7, UserInfoType("Keeper")));
+        7, UserInfoType("Insomniac Anderson")));
 }
 
 void BookStore::UserDatabase::close() {
@@ -100,14 +109,11 @@ void BookStore::UserDatabase::close() {
 }
 
 void BookStore::UserDatabase::user_register(const UserType &user) {
-  user_id_map.insert(user.ID, user);
+  user_id_map.insert(user.user_id, user);
 }
 
-void BookStore::UserDatabase::user_unregister(const UserInfoType &userID) {
-  std::vector<UserType> user_list = user_id_map[userID];
-  expect(user_list.size()).toBe(1);
-  UserType user = user_list[0];
-  user_id_map.erase(userID, user);
+void BookStore::UserDatabase::user_unregister(const UserType &user) {
+  user_id_map.erase(user.user_id, user);
 }
 
 
@@ -142,7 +148,6 @@ void BookStore::BookDatabase::close() {
 
 std::vector<BookStore::BookInfoType> BookStore::BookDatabase::keyword_splitter(
   const BookInfoType &keyword_list) {
-  // todo: "a||b" is invalid. fix it.
   std::vector<BookInfoType> keyword_vector;
   std::string keyword;
   for(int i = 0; i < keyword_list.length(); ++i) {
@@ -258,11 +263,11 @@ void BookStore::LogDatabase::add_log(
   const LogDescriptionType &description, int log_level) {
   info.total_income += income;
   info.total_expenditure += expenditure;
-  LogType log(info.total_income, info.total_expenditure, description);
+  LogType log(info.total_income, info.total_expenditure, description, true);
   all_log_id_map.insert(++info.all_log_count, log);
   if(log_level & 1)
-    finance_log_id_map.insert(++info.finance_log_count, log);
-  if(log_level & 2)
     employee_work_log_id_map.insert(++info.employee_work_log_count, log);
+  if(log_level & 2)
+    finance_log_id_map.insert(++info.finance_log_count, log);
 }
 

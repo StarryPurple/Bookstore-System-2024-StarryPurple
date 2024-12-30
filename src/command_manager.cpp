@@ -9,18 +9,21 @@ void BookStore::CommandManager::command_login(const ArglistType &argv) {
   // "su [UserID] ([Password])?"
   expect(argv.size()).toBeOneOf(2, 3);
   expect(argv[1]).toBeConsistedOf(digit_alpha_underline_alphabet);
+  LogType log;
   if(argv.size() == 2)
-    user_manager.login(UserInfoType(argv[1]));
+    log = user_manager.login(UserInfoType(argv[1]));
   else {
     expect(argv[2]).toBeConsistedOf(digit_alpha_underline_alphabet);
-    user_manager.login(UserInfoType(argv[1]), PasswordType(argv[2]));
+    log = user_manager.login(UserInfoType(argv[1]), PasswordType(argv[2]));
   }
+  log_manager.add_log(log, 0);
 }
 
 void BookStore::CommandManager::command_logout(const ArglistType &argv) {
   // “logout”
   expect(argv.size()).toBe(1);
-  user_manager.logout();
+  LogType log = user_manager.logout();
+  log_manager.add_log(log, 0);
 }
 
 void BookStore::CommandManager::command_user_register(const ArglistType &argv) {
@@ -29,26 +32,29 @@ void BookStore::CommandManager::command_user_register(const ArglistType &argv) {
   expect(argv[1]).toBeConsistedOf(digit_alpha_underline_alphabet);
   expect(argv[2]).toBeConsistedOf(digit_alpha_underline_alphabet);
   expect(argv[3]).toBeConsistedOf(ascii_alphabet);
-  user_manager.user_register(
+  LogType log = user_manager.user_register(
     UserType(
       UserInfoType(argv[1]), PasswordType(argv[2]),
       1, UserInfoType(argv[3])));
+  log_manager.add_log(log, 0);
 }
 
 void BookStore::CommandManager::command_change_password(const ArglistType &argv) {
   // "passwd [UserID] ([CurrentPassword])? [NewPassword]"
   expect(argv.size()).toBeOneOf(3, 4);
   expect(argv[1]).toBeConsistedOf(digit_alpha_underline_alphabet);
+  LogType log;
   if(argv.size() == 4) {
     expect(argv[2]).toBeConsistedOf(digit_alpha_underline_alphabet);
     expect(argv[3]).toBeConsistedOf(digit_alpha_underline_alphabet);
-    user_manager.change_password(
+    log = user_manager.change_password(
       UserInfoType(argv[1]), PasswordType(argv[2]), PasswordType(argv[3]));
   } else {
     expect(argv[2]).toBeConsistedOf(digit_alpha_underline_alphabet);
-    user_manager.change_password(
+    log = user_manager.change_password(
       UserInfoType(argv[1]), PasswordType(argv[2]));
   }
+  log_manager.add_log(log, 0);
 }
 
 void BookStore::CommandManager::command_user_add(const ArglistType &argv) {
@@ -60,17 +66,19 @@ void BookStore::CommandManager::command_user_add(const ArglistType &argv) {
   expect(argv[4]).toBeConsistedOf(ascii_alphabet);
   int pri = std::stoi(argv[3]);
   expect(pri).toBeOneOf(1, 3, 7);
-  user_manager.user_add(
+  LogType log = user_manager.user_add(
     UserType(
       UserInfoType(argv[1]), PasswordType(argv[2]),
       pri, UserInfoType(argv[4])));
+  log_manager.add_log(log, 1);
 }
 
 void BookStore::CommandManager::command_user_unregister(const ArglistType &argv) {
   // "delete [UserID]"
   expect(argv.size()).toBe(2);
   expect(argv[1]).toBeConsistedOf(digit_alpha_underline_alphabet);
-  user_manager.user_unregister(UserInfoType(argv[1]));
+  LogType log = user_manager.user_unregister(UserInfoType(argv[1]));
+  log_manager.add_log(log, 1);
 }
 
 void BookStore::CommandManager::command_list_book(const ArglistType &argv) {
@@ -130,7 +138,7 @@ void BookStore::CommandManager::command_sellout(const ArglistType &argv) {
   }
   LogType log = book_manager.sellout(ISBNType(argv[1]), quantity);
 
-  log_manager.add_log(log, 1);
+  log_manager.add_log(log, 2);
 }
 
 void BookStore::CommandManager::command_select_book(const ArglistType &argv) {
@@ -181,9 +189,10 @@ void BookStore::CommandManager::command_modify_book(const ArglistType &argv) {
       is_modified[4] = true;
     } else throw StarryPurple::ValidatorException();
   }
-  book_manager.modify_book(
+  LogType log = book_manager.modify_book(
     ISBNType(ISBN), BookInfoType(bookname), BookInfoType(author),
     BookInfoType(keyword_list), price, is_modified);
+  log_manager.add_log(log, 1);
 }
 
 void BookStore::CommandManager::command_restock(const ArglistType &argv) {
@@ -205,7 +214,7 @@ void BookStore::CommandManager::command_restock(const ArglistType &argv) {
     return;
   }
   LogType log = book_manager.restock(quantity, price);
-  log_manager.add_log(log, 1);
+  log_manager.add_log(log, 3);
 }
 
 void BookStore::CommandManager::command_show_log(const ArglistType &argv) {
@@ -219,7 +228,7 @@ void BookStore::CommandManager::command_show_report(const ArglistType &argv) {
   expect(argv.size()).toBe(2);
   if(argv[1] == "finance")
     log_manager.report_finance();
-  if(argv[1] == "employee")
+  else if(argv[1] == "employee")
     log_manager.report_employee();
   else throw StarryPurple::ValidatorException();
 }
@@ -267,6 +276,7 @@ BookStore::CommandManager::command_splitter(const std::string &command) {
 void BookStore::CommandManager::command_list_reader(const std::string &prefix, const std::string &directory) {
   LogType::log_count = 0;
   open(directory + prefix);
+  log_manager.add_log(LogType(0, 0, LogDescriptionType("System startup.")), 0);
   std::string command;
   while(std::getline(std::cin, command)) {
     ArglistType argv = command_splitter(command);
@@ -312,5 +322,6 @@ void BookStore::CommandManager::command_list_reader(const std::string &prefix, c
       std::cout << "Debug fail";
     }*/
   }
+  log_manager.add_log(LogType(0, 0, LogDescriptionType("System shutdown.")), 0);
   close();
 }

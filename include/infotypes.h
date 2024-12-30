@@ -42,6 +42,8 @@ using BookPtr = StarryPurple::Fpointer<cMaxFlowSize + 2>; // accord to book data
 using LogPtr = StarryPurple::Fpointer<cMaxFlowSize + 3>; // accord to log database sapacity
 
 class UserPrivilege {
+  friend UserType;
+  friend LoggedUserType;
 private:
   bool pri_1 = false, pri_2 = false, pri_3 = false;
 public:
@@ -67,6 +69,7 @@ public:
   BookType(const ISBNType &ISBN);
   ~BookType() = default;
   void print() const;
+  std::string book_identity_str() const;
   bool operator==(const BookType &other) const;
   bool operator!=(const BookType &other) const;
   bool operator<(const BookType &other) const;
@@ -75,14 +78,13 @@ public:
   bool operator>=(const BookType &other) const;
 };
 
-
 class UserType {
   friend LoggedUserType;
   friend UserStack;
   friend UserDatabase;
   friend UserManager; // needed?
 private:
-  UserInfoType ID, username;
+  UserInfoType user_id, username;
   PasswordType passwd;
   UserPrivilege privilege;
 public:
@@ -91,15 +93,14 @@ public:
     const UserInfoType &userID, const PasswordType &password,
     int user_privilege, const UserInfoType &name);
   ~UserType() = default;
+  std::string user_identity_str() const;
   bool operator==(const UserType &other) const;
   bool operator!=(const UserType &other) const;
   bool operator<(const UserType &other) const;
   bool operator>(const UserType &other) const;
   bool operator<=(const UserType &other) const;
   bool operator>=(const UserType &other) const;
-
 };
-
 
 class LogType {
   friend LogManager; // used in "show finance"
@@ -114,6 +115,10 @@ public:
   LogType(
     const PriceType &history_income, const PriceType &history_expenditure,
     const LogDescriptionType &description);
+  // for log count
+  LogType(
+    const PriceType &history_income, const PriceType &history_expenditure,
+    const LogDescriptionType &description, bool to_record);
   ~LogType() = default;
   bool operator==(const LogType &other) const;
   bool operator!=(const LogType &other) const;
@@ -122,6 +127,7 @@ public:
   bool operator<=(const LogType &other) const;
   bool operator>=(const LogType &other) const;
 };
+
 
 } // namespace BookStore
 

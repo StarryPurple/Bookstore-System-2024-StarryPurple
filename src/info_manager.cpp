@@ -23,40 +23,58 @@ void BookStore::UserManager::close() {
   is_running = false;
 }
 
-void BookStore::UserManager::login(const UserInfoType &userID, const PasswordType &password) {
+BookStore::LogType
+BookStore::UserManager::login(const UserInfoType &userID, const PasswordType &password) {
   std::vector<UserType> user_vector = user_database.user_id_map[userID];
   expect(user_vector.size()).toBe(1);
   UserType user = user_vector[0];
+  expect(user.passwd).toBe(password); // Hey I swapped this line and the line below and still passed the test
   user_stack.user_login(user);
-  expect(user.passwd).toBe(password);
+
+  return LogType(0, 0, LogDescriptionType(
+    user.user_identity_str() + " has logged in."));
 }
 
 
-void BookStore::UserManager::login(const UserInfoType &userID) {
+BookStore::LogType
+BookStore::UserManager::login(const UserInfoType &userID) {
   std::vector<UserType> user_vector = user_database.user_id_map[userID];
   expect(user_vector.size()).toBe(1);
   UserType user = user_vector[0];
   expect(user_stack.active_privilege()).greaterEqual(user.privilege);
   user_stack.user_login(user);
+
+  return LogType(0, 0, LogDescriptionType(
+    user.user_identity_str() + " has logged in"));
 }
 
-void BookStore::UserManager::user_register(const UserType &user) {
-  std::vector<UserType> user_vector = user_database.user_id_map[user.ID];
+BookStore::LogType
+BookStore::UserManager::user_register(const UserType &user) {
+  std::vector<UserType> user_vector = user_database.user_id_map[user.user_id];
   expect(user_vector.size()).toBe(0);
   user_database.user_register(user);
+
+  return LogType(0, 0, LogDescriptionType(
+    "New user registered: " + user.user_identity_str()));
 }
 
-void BookStore::UserManager::user_add(const UserType &user) {
+BookStore::LogType
+BookStore::UserManager::user_add(const UserType &user) {
   expect(user_stack.active_privilege()).greaterEqual(UserPrivilege(3));
   expect(user_stack.active_privilege()).Not().lesserEqual(user.privilege);
-  std::vector<UserType> user_vector = user_database.user_id_map[user.ID];
+  std::vector<UserType> user_vector = user_database.user_id_map[user.user_id];
   expect(user_vector.size()).toBe(0);
   user_database.user_register(user);
+
+  return LogType(0, 0, LogDescriptionType(
+    user_stack.active_user().user_identity_str() + " has added a new user: " +
+    user.user_identity_str()));
 }
 
 
 
-void BookStore::UserManager::change_password(
+BookStore::LogType
+BookStore::UserManager::change_password(
     const UserInfoType &userID,
     const PasswordType &cur_pwd, const PasswordType &new_pwd) {
   expect(user_stack.active_privilege()).greaterEqual(UserPrivilege(1));
@@ -67,9 +85,14 @@ void BookStore::UserManager::change_password(
   user_database.user_id_map.erase(userID, user);
   user.passwd = new_pwd;
   user_database.user_id_map.insert(userID, user);
+
+  return LogType(0, 0, LogDescriptionType(
+    user.user_identity_str() + " has changed password from \"" +
+    cur_pwd.to_str() + "\" to \"" + new_pwd.to_str() + "\""));
 }
 
-void BookStore::UserManager::change_password(
+BookStore::LogType
+BookStore::UserManager::change_password(
   const UserInfoType &userID,
   const PasswordType &new_pwd) {
   expect(user_stack.active_privilege()).greaterEqual(UserPrivilege(7));
@@ -79,18 +102,34 @@ void BookStore::UserManager::change_password(
   user_database.user_id_map.erase(userID, user);
   user.passwd = new_pwd;
   user_database.user_id_map.insert(userID, user);
+
+  return LogType(0, 0, LogDescriptionType(
+    user.user_identity_str() + " has changed password to \"" +
+    new_pwd.to_str() + "\""));
 }
 
-void BookStore::UserManager::logout() {
+BookStore::LogType
+BookStore::UserManager::logout() {
   expect(user_stack.active_privilege()).greaterEqual(UserPrivilege(1));
   expect(user_stack.empty()).toBe(false);
+  // remember to record before user trully logout.
+  LogType log = LogType(0, 0, LogDescriptionType(
+    user_stack.active_user().user_identity_str() + " has logged out"));
   user_stack.user_logout();
+  return log;
 }
 
-void BookStore::UserManager::user_unregister(const UserInfoType &userID) {
+BookStore::LogType
+BookStore::UserManager::user_unregister(const UserInfoType &userID) {
   expect(user_stack.active_privilege()).greaterEqual(UserPrivilege(7));
   expect(user_stack.logged_set.count(userID)).toBe(0);
-  user_database.user_unregister(userID);
+  std::vector<UserType> user_list = user_database.user_id_map[userID];
+  expect(user_list.size()).toBe(1);
+  UserType user = user_list[0];
+  user_database.user_unregister(user);
+
+  return LogType(0, 0, LogDescriptionType(
+    user.user_identity_str() + " has been unregistered"));
 }
 
 
@@ -196,7 +235,13 @@ BookStore::LogType BookStore::BookManager::restock(
   expect(book_vector.size()).toBe(1);
   BookType book = book_vector[0];
   book_database.book_change_storage(book, quantity);
-  return LogType(0, total_cost, LogDescriptionType("log command import"));
+
+  std::string log_description =
+    user_stack_ptr->active_user().username.to_str() + " has ";
+  return LogType(0, total_cost, LogDescriptionType(
+  user_stack_ptr->active_user().user_identity_str() + "has restocked" +
+  std::to_string(quantity) + " book(s): "
+  + book.book_identity_str()));
 }
 
 BookStore::LogType BookStore::BookManager::sellout(const ISBNType &ISBN, const QuantityType &quantity) {
@@ -207,10 +252,16 @@ BookStore::LogType BookStore::BookManager::sellout(const ISBNType &ISBN, const Q
   BookType book = book_vector[0];
   book_database.book_change_storage(book, -quantity); // remember this '-'
   std::cout << std::fixed << std::setprecision(2) << (book.price * quantity) << '\n';
-  return LogType(book.price * quantity, 0, LogDescriptionType("log command buy"));
+
+
+  return LogType(book.price * quantity, 0, LogDescriptionType(
+    user_stack_ptr->active_user().user_identity_str() + " has bought " +
+    std::to_string(quantity) + " book(s): "
+    + book.book_identity_str()));
 }
 
-void BookStore::BookManager::modify_book(
+BookStore::LogType
+BookStore::BookManager::modify_book(
   const ISBNType &ISBN, const BookInfoType &bookname,const BookInfoType &author,
   const BookInfoType &keyword_list, const PriceType &price, bool is_modified[5]) {
   expect(user_stack_ptr->active_privilege()).greaterEqual(UserPrivilege(3));
@@ -232,6 +283,10 @@ void BookStore::BookManager::modify_book(
     // modified_book here is a truthfully modified one, not with some uncertainties.
     user_stack_ptr->update_ISBN(old_ISBN, modified_book.isbn);
   }
+  return LogType(0, 0, LogDescriptionType(
+    user_stack_ptr->active_user().user_identity_str() + "has modified information of one book." +
+    " Some brief show:\n\tPreviously: " + old_book.book_identity_str() +
+    "\n\tNow: " + modified_book.book_identity_str()));
 }
 
 
@@ -264,7 +319,7 @@ void BookStore::LogManager::show_deal_history(const LogCountType &count) {
     show_deal_history();
     return;
   }
-  LogType history_log = log_database.all_log_id_map[log_database.info.finance_log_count - count][0];
+  LogType history_log = log_database.finance_log_id_map[log_database.info.finance_log_count - count][0];
   std::cout << "+ " << std::fixed << std::setprecision(2) <<
     log_database.info.total_income - history_log.total_income
   << " - " << log_database.info.total_expenditure - history_log.total_expenditure << '\n';

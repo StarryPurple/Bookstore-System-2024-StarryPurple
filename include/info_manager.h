@@ -24,18 +24,18 @@ private:
   bool is_running = false;
   void open(const std::string &prefix);
   void close();
-  void login(const UserInfoType &userID, const PasswordType &password); // command "su [userID] [password]"
-  void login(const UserInfoType &userID); // command "su [userID]"
-  void user_register(const UserType &user); // command "register"
-  void user_add(const UserType &user); // command "useradd"
-  void change_password(
+  LogType login(const UserInfoType &userID, const PasswordType &password); // command "su [userID] [password]"
+  LogType login(const UserInfoType &userID); // command "su [userID]"
+  LogType user_register(const UserType &user); // command "register"
+  LogType user_add(const UserType &user); // command "useradd"
+  LogType change_password(
     const UserInfoType &userID,
     const PasswordType &cur_pwd, const PasswordType &new_pwd); // command "pwd [userID] [currentPassword] [newPassword]"
-  void change_password(
+  LogType change_password(
     const UserInfoType &userID,
     const PasswordType &new_pwd); // command "pwd [userID] [newPassword]"
-  void logout(); // command "logout"
-  void user_unregister(const UserInfoType &userID); // command "delete"
+  LogType logout(); // command "logout"
+  LogType user_unregister(const UserInfoType &userID); // command "delete"
 public:
   UserManager() = default;
   ~UserManager();
@@ -60,7 +60,7 @@ private:
   LogType sellout(const ISBNType &ISBN, const QuantityType &quantity); // command "buy"
   // command "modify"
   // whether other augments are given is determined by whether it's an empty ConstString.
-  void modify_book(
+  LogType modify_book(
     const ISBNType &ISBN, const BookInfoType &bookname, const BookInfoType &author,
     const BookInfoType &keyword_list, const PriceType &price, bool is_modified[5]);
 public:
@@ -79,14 +79,19 @@ private:
   void open(const std::string &prefix);
   void close();
   // Common:
-  //   record everyone's call for all commands:
+  //   record everyone's call for important commands:
+  //   "su" "register" "useradd" "passwd" "logout" "delete" "buy" "import" "modify"
+  //   Also contains #system-starton, "quit" "exit".
+  //   Do not record logout caused by system shutdown and brute system-shutdown.
   // Param 0x01:
-  //   record an employee's / the bookstore keeper's call for commands:
+  //   record an employee's / the bookstore keeper's call for special commands:
   //   "useradd" "select" "modify" "import"
   // Param 0x10:
   //   record the income / expenditure change.
+  //   "buy" "import"
   // Param 0x11:
   //   record finance change and privileged user's specific actions.
+  //   "import"
   //
   // So log_level should be among {0, 1, 2, 3}.
   void add_log(

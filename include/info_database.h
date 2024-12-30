@@ -28,11 +28,13 @@ class LoggedUserType {
   friend UserStack;
   friend BookManager;
 private:
-  UserInfoType user_id;
+  UserInfoType user_id, username;
   UserPrivilege privilege;
   ISBNType ISBN_selected{};
   bool has_selected_book = false;
 public:
+  // "Client/Staff/Keeper ${usernane} (user id: ${user_id})"
+  std::string user_identity_str() const;
   LoggedUserType() = default;
   LoggedUserType(const UserType &user);
 };
@@ -49,7 +51,6 @@ private:
   // Uh, so that we don't need a file to store information.
   std::vector<LoggedUserType> u_stack;
   std::set<UserInfoType> logged_set;
-  // The password infomation may be not right.
   LoggedUserType &active_user();
   const UserPrivilege active_privilege();
   void open(const std::string &prefix);
@@ -73,7 +74,7 @@ private:
   void open(const std::string &prefix);
   void close();
   void user_register(const UserType &user);
-  void user_unregister(const UserInfoType &userID); // command "delete [userID]"
+  void user_unregister(const UserType &user); // command "delete [userID]"
 public:
   UserDatabase() = default;
   ~UserDatabase();
