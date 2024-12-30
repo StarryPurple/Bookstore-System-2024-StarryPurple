@@ -45,7 +45,7 @@ BookStore::UserManager::login(const UserInfoType &userID) {
   user_stack.user_login(user);
 
   return LogType(0, 0, LogDescriptionType(
-    user.user_identity_str() + " has logged in"));
+    user.user_identity_str() + " has logged in."));
 }
 
 BookStore::LogType
@@ -55,7 +55,7 @@ BookStore::UserManager::user_register(const UserType &user) {
   user_database.user_register(user);
 
   return LogType(0, 0, LogDescriptionType(
-    "New user registered: " + user.user_identity_str()));
+    "New user registered: " + user.user_identity_str() + '.'));
 }
 
 BookStore::LogType
@@ -68,7 +68,7 @@ BookStore::UserManager::user_add(const UserType &user) {
 
   return LogType(0, 0, LogDescriptionType(
     user_stack.active_user().user_identity_str() + " has added a new user: " +
-    user.user_identity_str()));
+    user.user_identity_str() + '.'));
 }
 
 
@@ -88,7 +88,7 @@ BookStore::UserManager::change_password(
 
   return LogType(0, 0, LogDescriptionType(
     user.user_identity_str() + " has changed password from \"" +
-    cur_pwd.to_str() + "\" to \"" + new_pwd.to_str() + "\""));
+    cur_pwd.to_str() + "\" to \"" + new_pwd.to_str() + "\"."));
 }
 
 BookStore::LogType
@@ -105,7 +105,7 @@ BookStore::UserManager::change_password(
 
   return LogType(0, 0, LogDescriptionType(
     user.user_identity_str() + " has changed password to \"" +
-    new_pwd.to_str() + "\""));
+    new_pwd.to_str() + "\"."));
 }
 
 BookStore::LogType
@@ -114,7 +114,7 @@ BookStore::UserManager::logout() {
   expect(user_stack.empty()).toBe(false);
   // remember to record before user trully logout.
   LogType log = LogType(0, 0, LogDescriptionType(
-    user_stack.active_user().user_identity_str() + " has logged out"));
+    user_stack.active_user().user_identity_str() + " has logged out."));
   user_stack.user_logout();
   return log;
 }
@@ -129,7 +129,7 @@ BookStore::UserManager::user_unregister(const UserInfoType &userID) {
   user_database.user_unregister(user);
 
   return LogType(0, 0, LogDescriptionType(
-    user.user_identity_str() + " has been unregistered"));
+    user.user_identity_str() + " has been unregistered."));
 }
 
 
@@ -236,12 +236,10 @@ BookStore::LogType BookStore::BookManager::restock(
   BookType book = book_vector[0];
   book_database.book_change_storage(book, quantity);
 
-  std::string log_description =
-    user_stack_ptr->active_user().username.to_str() + " has ";
   return LogType(0, total_cost, LogDescriptionType(
-  user_stack_ptr->active_user().user_identity_str() + "has restocked" +
+  user_stack_ptr->active_user().user_identity_str() + " has restocked " +
   std::to_string(quantity) + " book(s): "
-  + book.book_identity_str()));
+  + book.book_brief_identity_str() + " at price " + StarryPurple::dtos(total_cost) + '.'));
 }
 
 BookStore::LogType BookStore::BookManager::sellout(const ISBNType &ISBN, const QuantityType &quantity) {
@@ -257,7 +255,7 @@ BookStore::LogType BookStore::BookManager::sellout(const ISBNType &ISBN, const Q
   return LogType(book.price * quantity, 0, LogDescriptionType(
     user_stack_ptr->active_user().user_identity_str() + " has bought " +
     std::to_string(quantity) + " book(s): "
-    + book.book_identity_str()));
+    + book.book_brief_identity_str() + " at price " + StarryPurple::dtos(book.price * quantity) + '.'));
 }
 
 BookStore::LogType
@@ -284,9 +282,10 @@ BookStore::BookManager::modify_book(
     user_stack_ptr->update_ISBN(old_ISBN, modified_book.isbn);
   }
   return LogType(0, 0, LogDescriptionType(
-    user_stack_ptr->active_user().user_identity_str() + "has modified information of one book." +
-    " Some brief show:\n\tPreviously: " + old_book.book_identity_str() +
-    "\n\tNow: " + modified_book.book_identity_str()));
+    user_stack_ptr->active_user().user_identity_str() + " has modified information of one book." +
+    " Detailed information:"+
+    "\n\tPreviously: " + old_book.book_full_identity_str() +
+    "\n\tNow:        " + modified_book.book_full_identity_str()));
 }
 
 
@@ -339,6 +338,8 @@ void BookStore::LogManager::report_finance() {
   for(size_t i = 1; i <= log_database.info.finance_log_count; ++i) {
     log = log_database.finance_log_id_map[i][0];
 
+    std::cout << log.log_description.to_str() << '\n';
+
     if(log.total_income - history_income != 0)
       std::cout << "Earned: " << std::fixed << std::setprecision(2) <<
         log.total_income - history_income << '\n';
@@ -352,6 +353,7 @@ void BookStore::LogManager::report_finance() {
   std::cout << '\n' << "Total history income: " << std::fixed << std::setprecision(2) <<
     history_income << '\n' << "Total history expenditure: " <<
       history_expenditure << '\n';
+  std::cout << "Finance history report ends here.\n";
 }
 
 void BookStore::LogManager::report_employee() {
@@ -362,18 +364,17 @@ void BookStore::LogManager::report_employee() {
     log = log_database.employee_work_log_id_map[i][0];
     std::cout << log.log_description.to_str() << '\n';
   }
-  std::cout << '\n';
+  std::cout << "Employee working history report ends here.\n";
 }
 
 void BookStore::LogManager::report_history() {
   expect(user_stack_ptr->active_privilege()).greaterEqual(UserPrivilege(7));
   std::cout << "Now reporting system history.\n";
-  LogType log;
   for(size_t i = 1; i <= log_database.info.all_log_count; ++i) {
-    log = log_database.all_log_id_map[i][0];
+    LogType log = log_database.all_log_id_map[i][0];
     std::cout << log.log_description.to_str() << '\n';
   }
-  std::cout << '\n';
+  std::cout << "System history report ends here.\n";
 }
 
 void BookStore::LogManager::add_log(

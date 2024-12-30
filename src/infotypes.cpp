@@ -56,9 +56,15 @@ void BookStore::BookType::print() const {
       price << '\t' << storage << '\n';
 }
 
-std::string BookStore::BookType::book_identity_str() const {
+std::string BookStore::BookType::book_brief_identity_str() const {
   return '\"' + bookname.to_str() + "\" (ISBN: " + isbn.to_str() + ")";
 }
+
+std::string BookStore::BookType::book_full_identity_str() const {
+  return isbn.to_str() + '\t' + bookname.to_str() + '\t' + author.to_str() +
+    '\t' + keyword_list.to_str() + '\t' + StarryPurple::dtos(price) + '\t' + std::to_string(storage);
+}
+
 
 
 BookStore::UserType::UserType(

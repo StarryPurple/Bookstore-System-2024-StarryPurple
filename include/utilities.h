@@ -135,6 +135,8 @@ public:
   const char operator[](int index) const;
 };
 
+std::string dtos(double val, int digit = 2);
+
 } // namespace StarryPurple
 
 

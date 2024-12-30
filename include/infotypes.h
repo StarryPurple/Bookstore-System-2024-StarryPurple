@@ -69,7 +69,8 @@ public:
   BookType(const ISBNType &ISBN);
   ~BookType() = default;
   void print() const;
-  std::string book_identity_str() const;
+  std::string book_brief_identity_str() const;
+  std::string book_full_identity_str() const;
   bool operator==(const BookType &other) const;
   bool operator!=(const BookType &other) const;
   bool operator<(const BookType &other) const;

@@ -1,6 +1,9 @@
 #ifndef UTILITIES_TPP
 #define UTILITIES_TPP
 
+#include <sstream>
+#include <iomanip>
+
 #include "utilities.h"
 
 
@@ -490,5 +493,6 @@ template<int capacity>
 const char StarryPurple::ConstStr<capacity>::operator[](int index) const {
   return storage[index];
 }
+
 
 #endif // UTILITIES_TPP
