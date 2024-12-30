@@ -255,7 +255,6 @@ void BookStore::CommandManager::command_list_reader(const std::string &prefix, c
     ArglistType argv = command_splitter(command);
     if(argv.empty()) continue;
     try {
-      try {
         if(argv[0] == "quit" || argv[0] == "exit") {
           expect(argv.size()).toBe(1);
           break;
@@ -284,6 +283,7 @@ void BookStore::CommandManager::command_list_reader(const std::string &prefix, c
           command_user_unregister(argv);
           continue;
         }
+      try {
         if(argv[0] == "show") {
           if(argv[1] == "finance") {
             command_show_finance(argv);
