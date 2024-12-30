@@ -283,43 +283,43 @@ void BookStore::CommandManager::command_list_reader(const std::string &prefix, c
         command_user_unregister(argv);
         continue;
       }
+      if(argv[0] == "show") {
+        if(argv[1] == "finance") {
+          command_show_finance(argv);
+          continue;
+        }
+        else {
+          command_list_book(argv);
+          continue;
+        }
+      }
+      if(argv[0] == "buy") {
+        command_sellout(argv);
+        continue;
+      }
+      if(argv[0] == "select") {
+        command_select_book(argv);
+        continue;
+      }
+      if(argv[0] == "modify") {
+        command_modify_book(argv);
+        continue;
+      }
       try {
-        if(argv[0] == "show") {
-          if(argv[1] == "finance") {
-            command_show_finance(argv);
-            continue;
-          }
-          else {
-            command_list_book(argv);
-            continue;
-          }
-        }
-        if(argv[0] == "buy") {
-          command_sellout(argv);
+        if(argv[0] == "import") {
+          command_restock(argv);
           continue;
         }
-        if(argv[0] == "select") {
-          command_select_book(argv);
+        if(argv[0] == "log") {
+          command_show_log(argv);
           continue;
         }
-        if(argv[0] == "modify") {
-          command_modify_book(argv);
+        if(argv[0] == "report") {
+          command_show_report(argv);
           continue;
         }
-      } catch(std::out_of_range &) {
+      } catch(std::runtime_error &) {
         std::cout << "Wrong\n";
-        continue;
-      }
-      if(argv[0] == "import") {
-        command_restock(argv);
-        continue;
-      }
-      if(argv[0] == "log") {
-        command_show_log(argv);
-        continue;
-      }
-      if(argv[0] == "report") {
-        command_show_report(argv);
         continue;
       }
       throw StarryPurple::ValidatorException();
