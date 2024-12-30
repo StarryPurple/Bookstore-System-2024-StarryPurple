@@ -38,7 +38,8 @@ private:
   };
   struct VlistNode {
     // todo: add this_ptr
-    ValueType value;
+    int node_size = 0;
+    ValueType value[degree + 1];
     VlistPtr nxt;
   };
   InnerFstream inner_fstream;
