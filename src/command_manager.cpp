@@ -283,7 +283,6 @@ void BookStore::CommandManager::command_list_reader(const std::string &prefix, c
           command_user_unregister(argv);
           continue;
         }
-      try {
         if(argv[0] == "show") {
           if(argv[1] == "finance") {
             command_show_finance(argv);
@@ -302,6 +301,7 @@ void BookStore::CommandManager::command_list_reader(const std::string &prefix, c
           command_select_book(argv);
           continue;
         }
+      try {
         if(argv[0] == "modify") {
           command_modify_book(argv);
           continue;
