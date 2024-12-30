@@ -7,7 +7,7 @@ void multimap_test() {
   using KeyType = StarryPurple::ConstStr<64>;
   using ValueType = int;
   StarryPurple::Fmultimap<KeyType, ValueType, 40, StarryPurple::cCapacity> fmultimap;
-  fmultimap.open("test");
+  fmultimap.open("tst");
   int n; std::cin >> n;
   std::string op, key_str;
   ValueType value;
@@ -42,6 +42,6 @@ void Main() {
 }
 
 int main() {
-  Main();
+  multimap_test();
   return 0;
 }
