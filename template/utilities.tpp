@@ -253,6 +253,66 @@ void StarryPurple::Fmultimap<KeyType, ValueType, degree, capacity>::erase(
       nxt_vlist_node.value[i] = nxt_vlist_node.value[i + 1];
     nxt_vlist_node.value[nxt_vlist_node.node_size] = ValueType();
     vlist_fstream.write(nxt_vlist_node, nxt_vlist_ptr);
+
+    if(nxt_vlist_node.node_size < degree / 2) {
+      if(cur_vlist_ptr != cur_inner_node.vlist_ptrs[pos]) {
+        if(cur_vlist_node.node_size > degree / 2) {
+          int total_size = cur_vlist_node.node_size + nxt_vlist_node.node_size;
+          int left_size = total_size / 2, right_size = total_size - left_size;
+          ValueType empty_value;
+          for(int i = 0; i < right_size - nxt_vlist_node.node_size; ++i) {
+            nxt_vlist_node.value[nxt_vlist_node.node_size + i] = cur_vlist_node.value[left_size + i];
+            cur_vlist_node.value[left_size + i] = empty_value;
+          }
+          cur_vlist_node.node_size = left_size;
+          nxt_vlist_node.node_size = right_size;
+          vlist_fstream.write(cur_vlist_node, cur_vlist_ptr);
+          vlist_fstream.write(nxt_vlist_node, nxt_vlist_ptr);
+        } else {
+          int total_size = cur_vlist_node.node_size + nxt_vlist_node.node_size;
+          int left_size = cur_vlist_node.node_size;
+          for(int i = 0; i < nxt_vlist_node.node_size; ++i)
+            cur_vlist_node.value[left_size + i] = nxt_vlist_node.value[i];
+          cur_vlist_node.node_size = total_size;
+          cur_vlist_node.nxt = nxt_vlist_node.nxt;
+          vlist_fstream.write(cur_vlist_node, cur_vlist_ptr);
+          vlist_fstream.free(nxt_vlist_ptr);
+        }
+        return;
+      }
+      if(!nxt_vlist_node.nxt.isnull()) {
+        cur_vlist_node = nxt_vlist_node;
+        cur_vlist_ptr = nxt_vlist_ptr;
+        nxt_vlist_ptr = cur_vlist_node.nxt;
+        vlist_fstream.read(nxt_vlist_node, nxt_vlist_ptr);
+        if(nxt_vlist_node.node_size > degree / 2) {
+          int total_size = cur_vlist_node.node_size + nxt_vlist_node.node_size;
+          int left_size = total_size / 2, right_size = total_size - left_size;
+          ValueType empty_value;
+          for(int i = 0; i < left_size - cur_vlist_node.node_size; ++i)
+            cur_vlist_node.value[cur_vlist_node.node_size + i] = nxt_vlist_node.value[i];
+          for(int i = 0, diff = left_size - cur_vlist_node.node_size; i < right_size; ++i)
+            nxt_vlist_node.value[i] = nxt_vlist_node.value[i + diff];
+          for(int i = 0; i < left_size - cur_vlist_node.node_size; ++i)
+            nxt_vlist_node.value[right_size + i] = empty_value;
+          cur_vlist_node.node_size = left_size;
+          nxt_vlist_node.node_size = right_size;
+          vlist_fstream.write(cur_vlist_node, cur_vlist_ptr);
+          vlist_fstream.write(nxt_vlist_node, nxt_vlist_ptr);
+        } else {
+          int total_size = cur_vlist_node.node_size + nxt_vlist_node.node_size;
+          int left_size = cur_vlist_node.node_size;
+          for(int i = 0; i < nxt_vlist_node.node_size; ++i)
+            cur_vlist_node.value[left_size + i] = nxt_vlist_node.value[i];
+          cur_vlist_node.node_size = total_size;
+          cur_vlist_node.nxt = nxt_vlist_node.nxt;
+          vlist_fstream.write(cur_vlist_node, cur_vlist_ptr);
+          vlist_fstream.free(nxt_vlist_ptr);
+        }
+        return;
+      }
+    }
+
     return;
   }
   // if code reaches here, it means: value too big.
