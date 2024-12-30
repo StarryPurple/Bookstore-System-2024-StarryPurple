@@ -3,7 +3,7 @@
 // #include "headers.h"
 #include "command_manager.h"
 
-void mian() {
+void multimap_test() {
   using KeyType = StarryPurple::ConstStr<64>;
   using ValueType = int;
   StarryPurple::Fmultimap<KeyType, ValueType, 40, StarryPurple::cCapacity> fmultimap;
