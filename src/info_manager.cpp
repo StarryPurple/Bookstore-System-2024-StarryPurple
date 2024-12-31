@@ -284,8 +284,8 @@ BookStore::BookManager::modify_book(
   return LogType(0, 0, LogDescriptionType(
     user_stack_ptr->active_user().user_identity_str() + " has modified information of one book." +
     " Detailed information:"+
-    "\n\tPreviously: " + old_book.book_full_identity_str() +
-    "\n\tNow:        " + modified_book.book_full_identity_str()));
+    "\n          \tPreviously: " + old_book.book_full_identity_str() +
+    "\n          \tNow:        " + modified_book.book_full_identity_str()));
 }
 
 
@@ -338,13 +338,14 @@ void BookStore::LogManager::report_finance() {
   for(size_t i = 1; i <= log_database.info.finance_log_count; ++i) {
     log = log_database.finance_log_id_map[i][0];
 
-    std::cout << log.log_description.to_str() << '\n';
+    std::cout << std::setw(6) << i ;
+    std::cout << " |--" << log.log_description.to_str() << '\n';
 
     if(log.total_income - history_income != 0)
-      std::cout << "Earned: " << std::fixed << std::setprecision(2) <<
+      std::cout << "          Earned: " << std::fixed << std::setprecision(2) <<
         log.total_income - history_income << '\n';
     else if(log.total_expenditure - history_expenditure != 0)
-      std::cout << "Used: " << std::fixed << std::setprecision(2) <<
+      std::cout << "          Used: " << std::fixed << std::setprecision(2) <<
         log.total_expenditure - history_expenditure << '\n';
 
     history_income = log.total_income;
@@ -362,7 +363,8 @@ void BookStore::LogManager::report_employee() {
   LogType log;
   for(size_t i = 1; i <= log_database.info.employee_work_log_count; ++i) {
     log = log_database.employee_work_log_id_map[i][0];
-    std::cout << log.log_description.to_str() << '\n';
+    std::cout << std::setw(6) << i ;
+    std::cout << " |--" << log.log_description.to_str() << '\n';
   }
   std::cout << "Employee working history report ends here.\n";
 }
@@ -372,7 +374,8 @@ void BookStore::LogManager::report_history() {
   std::cout << "Now reporting system history.\n";
   for(size_t i = 1; i <= log_database.info.all_log_count; ++i) {
     LogType log = log_database.all_log_id_map[i][0];
-    std::cout << log.log_description.to_str() << '\n';
+    std::cout << std::setw(6) << i ;
+    std::cout << " |--" << log.log_description.to_str() << '\n';
   }
   std::cout << "System history report ends here.\n";
 }

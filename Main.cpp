@@ -42,6 +42,6 @@ void Main() {
 }
 
 int main() {
-  multimap_test();
+  Main();
   return 0;
 }
