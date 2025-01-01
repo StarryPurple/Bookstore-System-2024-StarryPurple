@@ -8,29 +8,38 @@
 
 namespace Insomnia {
 
-template<class KeyType, class ValueType, size_t capacity, int degree = 32>
-class BlocklistMultimap {
+template<class KeyType, class ValueType, int degree = 32, size_t capacity = StarryPurple::cCapacity>
+class BlinkTree {
+  const int largest_size = degree, smallest_size = degree / 2 - 2;
   using KVType = std::pair<KeyType, ValueType>;
   using NodePtr = StarryPurple::Fpointer<capacity>;
   struct NodeType {
-    NodePtr prev, nxt;
-    int node_size = 0;
+    bool is_leaf;
+    int node_size;
+    NodePtr child[degree + 1], prev, next;
     KVType kv[degree + 1];
   };
 
   StarryPurple::Fstream<NodeType, NodePtr, capacity> multimap_fstream;
-  NodePtr begin_ptr;
+  NodePtr root_ptr;
   bool is_open = false;
+  std::vector<std::pair<NodeType, NodePtr>> route;
 
-  void try_average(NodeType &node, NodePtr &node_ptr);
-  void merge(NodeType &left_node, NodeType &right_node, NodePtr &left_ptr, NodePtr &right_ptr);
-  void average_from_left(NodeType &left_node, NodeType &right_node, NodePtr &left_ptr, NodePtr &right_ptr);
-  void average_from_right(NodeType &left_node, NodeType &right_node, NodePtr &left_ptr, NodePtr &right_ptr);
-  void split(NodeType &left_node, NodePtr &left_ptr);
+  void try_average();
+  void merge(
+    NodePtr &left_ptr, NodeType &left_node, NodePtr &right_ptr, NodeType &right_node,
+    NodePtr &parent_ptr, NodeType &parent_node);
+  void average_from_left(
+    NodePtr &left_ptr, NodeType &left_node, NodePtr &right_ptr, NodeType &right_node,
+    NodePtr &parent_ptr, NodeType &parent_node);
+  void average_from_right(
+    NodePtr &left_ptr, NodeType &left_node, NodePtr &right_ptr, NodeType &right_node,
+    NodePtr &parent_ptr, NodeType &parent_node);
+  void try_split();
 
 public:
-  BlocklistMultimap() = default;
-  ~BlocklistMultimap();
+  BlinkTree() = default;
+  ~BlinkTree();
   void open(const std::string &prefix);
   void close();
 
