@@ -57,11 +57,3 @@ Possible commands:
    Shopkeeper access required.
    
    echo out the latest logs according to the limitation of parameters.
-
-
-
-
-
-
-
-
