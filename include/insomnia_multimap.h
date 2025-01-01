@@ -8,7 +8,7 @@
 
 namespace Insomnia {
 
-template<class KeyType, class ValueType, int degree = 32, size_t capacity = StarryPurple::cCapacity>
+template<class KeyType, class ValueType, int degree, size_t capacity>
 class BlinkTree {
   const int largest_size = degree, smallest_size = degree / 2 - 2;
   using KVType = std::pair<KeyType, ValueType>;
