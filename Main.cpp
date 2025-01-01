@@ -1,12 +1,12 @@
 #include <iostream>
 #include <cstring>
-// #include "headers.h"
 #include "command_manager.h"
+#include "insomnia_multimap.h"
 
 void multimap_test() {
   using KeyType = StarryPurple::ConstStr<64>;
   using ValueType = int;
-  StarryPurple::Fmultimap<KeyType, ValueType, 40, StarryPurple::cCapacity> fmultimap;
+  Insomnia::BlocklistMultimap<KeyType, ValueType, 40, StarryPurple::cCapacity> fmultimap;
   fmultimap.open("tst");
   int n; std::cin >> n;
   std::string op, key_str;
@@ -42,6 +42,7 @@ void Main() {
 }
 
 int main() {
-  Main();
+  multimap_test();
+  // Main();
   return 0;
 }
