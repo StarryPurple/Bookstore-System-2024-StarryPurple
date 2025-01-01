@@ -1,6 +1,6 @@
 #include <iostream>
 #include <cstring>
-#include "command_manager.h"
+#include "utilities.h"
 #include "insomnia_multimap.h"
 
 void multimap_test() {
@@ -34,6 +34,7 @@ void multimap_test() {
   fmultimap.close();
 }
 
+/*
 void Main() {
   // 19 files are used. Can I cut this number down?
   // freopen("input.txt", "r", stdin); freopen("output.txt", "w", stdout);
@@ -41,6 +42,7 @@ void Main() {
   command_manager.command_list_reader("Test", "./");
   // fclose(stdin); fclose(stdout);
 }
+*/
 
 int main() {
   multimap_test();
