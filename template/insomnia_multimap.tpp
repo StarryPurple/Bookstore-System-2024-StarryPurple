@@ -224,12 +224,41 @@ void Insomnia::BlinkTree<KeyType, ValueType, degree, capacity>::try_split() {
 template<class KeyType, class ValueType, int degree, size_t capacity>
 void Insomnia::BlinkTree<KeyType, ValueType, degree, capacity>::try_average() {
   if(route.back().first.node_size >= smallest_size) return;
-  if(route.size() == 1) return; // can't shrink root node
-  NodeType cur_node = route.back().first, parent_node;
-  NodePtr cur_ptr = route.back().second, parent_ptr;
+  NodeType cur_node = route.back().first;
+  NodePtr cur_ptr = route.back().second;
   route.pop_back();
-  parent_node = route.back().first;
-  parent_ptr = route.back().second;
+  if(route.empty()) {
+    // cur_node = root node.
+    // the root node has too little nodes.
+    if(cur_node.is_leaf)
+      // The tree has only one node (root node).
+      // We have to accept this.
+      return;
+    // else we should ask:
+    if(cur_node.node_size > 2)
+      return; // It can be accepted.
+    // assert(cur_node.node_size == 2);
+    // the size of none-leaf root node shouldn't be that small.
+    // As smallest_size * 2 < largest_size, we can merge these two children.
+    NodePtr left_ptr = cur_node.child[0], right_ptr = cur_node.child[1];
+    NodeType left_node, right_node;
+    multimap_fstream.read(left_node, left_ptr);
+    multimap_fstream.read(right_node, right_ptr);
+    int left_size = left_node.node_size, right_size = right_node.node_size;
+    for(int i = 0; i < right_size; ++i) {
+      left_node.kv[left_size + i] = right_node.kv[i];
+      left_node.child[left_size + i] = right_node.child[i];
+    }
+    left_node.node_size = left_size + right_size;
+    left_node.next.setnull();
+    multimap_fstream.write(left_node, left_ptr);
+    multimap_fstream.free(right_ptr);
+    root_ptr = left_ptr;
+    return;
+  }
+  NodeType parent_node = route.back().first;
+  NodePtr parent_ptr = route.back().second;
+  route.pop_back();
 
   bool has_left = !cur_node.prev.isnull(), has_right = !cur_node.next.isnull();
   NodeType left_node, right_node;
