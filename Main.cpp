@@ -7,7 +7,7 @@ void multimap_test() {
   using KeyType = StarryPurple::ConstStr<64>;
   using ValueType = int;
   // StarryPurple::Fmultimap<KeyType, ValueType, 32, StarryPurple::cCapacity> fmultimap;
-  Insomnia::BlinkTree<KeyType, ValueType, 32, 8000> fmultimap;
+  Insomnia::BlinkTree<KeyType, ValueType, 32, 16000> fmultimap;
   fmultimap.open("tst");
   int n; std::cin >> n;
   std::string op, key_str;
