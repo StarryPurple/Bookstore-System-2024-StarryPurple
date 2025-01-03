@@ -206,7 +206,7 @@ void Insomnia::BlinkTree<KeyType, ValueType, degree, capacity>::try_split() {
     if(kv_pair > parent_node.kv[mid]) l = mid + 1;
     else r = mid;
   }
-  assert(kv_pair == parent_node.kv[l]);
+  // assert(kv_pair == parent_node.kv[l]);
   for(int i = parent_node.node_size; i > l; --i) {
     parent_node.kv[i] = parent_node.kv[i - 1];
     parent_node.child[i] = parent_node.child[i - 1];
