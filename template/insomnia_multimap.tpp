@@ -86,6 +86,7 @@ void Insomnia::BlinkTree<KeyType, ValueType, degree, capacity>::insert(const Key
     cur_ptr = cur_node.child[l];
     multimap_fstream.read(cur_node, cur_ptr);
   }
+  maintain_key();
   try_split();
 }
 
@@ -123,6 +124,7 @@ void Insomnia::BlinkTree<KeyType, ValueType, degree, capacity>::erase(const KeyT
     cur_ptr = cur_node.child[l];
     multimap_fstream.read(cur_node, cur_ptr);
   }
+  maintain_key();
   try_average();
 }
 
@@ -383,6 +385,26 @@ void Insomnia::BlinkTree<KeyType, ValueType, degree, capacity>::average_from_rig
   multimap_fstream.write(parent_node, parent_ptr);
 }
 
+template<class KeyType, class ValueType, int degree, size_t capacity>
+void Insomnia::BlinkTree<KeyType, ValueType, degree, capacity>::maintain_key() {
+  for(int i = route.size() - 1; i > 0; --i) {
+    NodePtr child_ptr = route[i].second, parent_ptr = route[i - 1].second;
+    NodeType child_node, parent_node;
+    multimap_fstream.read(child_node, child_ptr);
+    multimap_fstream.read(parent_node, parent_ptr);
+    KVType kv_pair = child_node.kv[child_node.node_size - 1];
+    int l = 0, r = parent_node.node_size - 1;
+    while(l < r) {
+      int mid = (l + r) >> 1;
+      if(kv_pair > parent_node.kv[mid]) l = mid + 1;
+      else r = mid;
+    }
+    if(parent_node.kv[l] == kv_pair) return;
+    parent_node.kv[l] = kv_pair;
+    multimap_fstream.write(parent_node, parent_ptr);
+    route[i - 1].first = parent_node;
+  }
+}
 
 
 #endif // INSOMNIA_MULTIMAP_TPP

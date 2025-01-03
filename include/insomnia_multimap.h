@@ -37,6 +37,8 @@ class BlinkTree {
     NodePtr &parent_ptr, NodeType &parent_node);
   void try_split();
 
+  void maintain_key();
+
 public:
   BlinkTree() = default;
   ~BlinkTree();
