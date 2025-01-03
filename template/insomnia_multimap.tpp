@@ -235,25 +235,11 @@ void Insomnia::BlinkTree<KeyType, ValueType, degree, capacity>::try_average() {
       // We have to accept this.
       return;
     // else we should ask:
-    if(cur_node.node_size > 2)
+    if(cur_node.node_size > 1)
       return; // It can be accepted.
-    assert(cur_node.node_size == 2);
-    // the size of none-leaf root node shouldn't be that small.
-    // As smallest_size * 2 < largest_size, we can merge these two children.
-    NodePtr left_ptr = cur_node.child[0], right_ptr = cur_node.child[1];
-    NodeType left_node, right_node;
-    multimap_fstream.read(left_node, left_ptr);
-    multimap_fstream.read(right_node, right_ptr);
-    int left_size = left_node.node_size, right_size = right_node.node_size;
-    for(int i = 0; i < right_size; ++i) {
-      left_node.kv[left_size + i] = right_node.kv[i];
-      left_node.child[left_size + i] = right_node.child[i];
-    }
-    left_node.node_size = left_size + right_size;
-    left_node.next.setnull();
-    multimap_fstream.write(left_node, left_ptr);
-    multimap_fstream.free(right_ptr);
-    root_ptr = left_ptr;
+    // delete the root node.
+    root_ptr = cur_node.child[0];
+    multimap_fstream.free(cur_ptr);
     return;
   }
   NodeType parent_node = route.back().first;
@@ -325,7 +311,6 @@ void Insomnia::BlinkTree<KeyType, ValueType, degree, capacity>::merge(
     if(kv_pair > parent_node.kv[mid]) l = mid + 1;
     else r = mid;
   }
-  assert(parent_node.kv[l] == kv_pair);
   --parent_node.node_size;
   for(int i = l; i < parent_node.node_size; ++i) {
     parent_node.kv[i] = parent_node.kv[i + 1];
@@ -363,7 +348,6 @@ void Insomnia::BlinkTree<KeyType, ValueType, degree, capacity>::average_from_lef
     if(kv_pair > parent_node.kv[mid]) l = mid + 1;
     else r = mid;
   }
-  assert(parent_node.kv[l] == kv_pair);
   parent_node.kv[l] = left_node.kv[left_node.node_size - 1];
   multimap_fstream.write(parent_node, parent_ptr);
 }
@@ -395,7 +379,6 @@ void Insomnia::BlinkTree<KeyType, ValueType, degree, capacity>::average_from_rig
     if(kv_pair > parent_node.kv[mid]) l = mid + 1;
     else r = mid;
   }
-  assert(parent_node.kv[l] == kv_pair);
   parent_node.kv[l] = left_node.kv[left_node.node_size - 1];
   multimap_fstream.write(parent_node, parent_ptr);
 }
