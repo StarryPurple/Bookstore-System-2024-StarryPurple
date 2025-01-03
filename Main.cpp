@@ -12,24 +12,28 @@ void multimap_test() {
   int n; std::cin >> n;
   std::string op, key_str;
   ValueType value;
-  while(n--) {
-    std::cin >> op;
-    if(op == "insert") {
-      std::cin >> key_str >> value;
-      fmultimap.insert(KeyType(key_str), value);
-    } else if(op == "find") {
-      std::cin >> key_str;
-      auto list = fmultimap[KeyType(key_str)];
-      if(list.empty())
-        std::cout << "null";
-      else
-        for(const auto &val: list)
-          std::cout << val << " ";
-      std::cout << std::endl;
-    } else if(op == "delete") {
-      std::cin >> key_str >> value;
-      fmultimap.erase(KeyType(key_str), value);
+  try {
+    while(n--) {
+      std::cin >> op;
+      if(op == "insert") {
+        std::cin >> key_str >> value;
+        fmultimap.insert(KeyType(key_str), value);
+      } else if(op == "find") {
+        std::cin >> key_str;
+        auto list = fmultimap[KeyType(key_str)];
+        if(list.empty())
+          std::cout << "null";
+        else
+          for(const auto &val: list)
+            std::cout << val << " ";
+        std::cout << std::endl;
+      } else if(op == "delete") {
+        std::cin >> key_str >> value;
+        fmultimap.erase(KeyType(key_str), value);
+      }
     }
+  } catch(...) {
+    std::cout << "Wrong";
   }
   fmultimap.close();
 }
