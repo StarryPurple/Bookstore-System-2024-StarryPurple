@@ -32,7 +32,7 @@ void multimap_test() {
         fmultimap.erase(KeyType(key_str), value);
       }
     }
-  } catch(...) {
+  } catch(std::runtime_error &) {
     std::cout << "Wrong";
   }
   fmultimap.close();
