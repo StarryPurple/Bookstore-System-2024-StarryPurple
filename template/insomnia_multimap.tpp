@@ -206,7 +206,7 @@ void Insomnia::BlinkTree<KeyType, ValueType, degree, capacity>::try_split() {
     if(kv_pair > parent_node.kv[mid]) l = mid + 1;
     else r = mid;
   }
-  // assert(kv_pair == parent_node.kv[l]);
+  assert(kv_pair == parent_node.kv[l]);
   for(int i = parent_node.node_size; i > l; --i) {
     parent_node.kv[i] = parent_node.kv[i - 1];
     parent_node.child[i] = parent_node.child[i - 1];
@@ -237,7 +237,7 @@ void Insomnia::BlinkTree<KeyType, ValueType, degree, capacity>::try_average() {
     // else we should ask:
     if(cur_node.node_size > 2)
       return; // It can be accepted.
-    // assert(cur_node.node_size == 2);
+    assert(cur_node.node_size == 2);
     // the size of none-leaf root node shouldn't be that small.
     // As smallest_size * 2 < largest_size, we can merge these two children.
     NodePtr left_ptr = cur_node.child[0], right_ptr = cur_node.child[1];
@@ -325,7 +325,7 @@ void Insomnia::BlinkTree<KeyType, ValueType, degree, capacity>::merge(
     if(kv_pair > parent_node.kv[mid]) l = mid + 1;
     else r = mid;
   }
-  // assert...
+  assert(parent_node.kv[l] == kv_pair);
   --parent_node.node_size;
   for(int i = l; i < parent_node.node_size; ++i) {
     parent_node.kv[i] = parent_node.kv[i + 1];
@@ -363,6 +363,7 @@ void Insomnia::BlinkTree<KeyType, ValueType, degree, capacity>::average_from_lef
     if(kv_pair > parent_node.kv[mid]) l = mid + 1;
     else r = mid;
   }
+  assert(parent_node.kv[l] == kv_pair);
   parent_node.kv[l] = left_node.kv[left_node.node_size - 1];
   multimap_fstream.write(parent_node, parent_ptr);
 }
@@ -394,6 +395,7 @@ void Insomnia::BlinkTree<KeyType, ValueType, degree, capacity>::average_from_rig
     if(kv_pair > parent_node.kv[mid]) l = mid + 1;
     else r = mid;
   }
+  assert(parent_node.kv[l] == kv_pair);
   parent_node.kv[l] = left_node.kv[left_node.node_size - 1];
   multimap_fstream.write(parent_node, parent_ptr);
 }
