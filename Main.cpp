@@ -46,6 +46,12 @@ void Main() {
 
 int main() {
   multimap_test();
+  /*
+  try {
+    multimap_test();
+  } catch (StarryPurple::FileExceptions &ex) {
+    std::cout << ex.what() << std::endl;
+  }*/
   // Main();
   return 0;
 }

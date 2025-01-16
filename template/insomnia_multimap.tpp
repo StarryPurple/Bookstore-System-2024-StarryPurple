@@ -185,6 +185,7 @@ void Insomnia::BlinkTree<KeyType, ValueType, degree, capacity>::try_split() {
   for(int i = 0; i < right_size; ++i) {
     right_node.child[i] = cur_node.child[left_size + i];
     right_node.kv[i] = cur_node.kv[left_size + i];
+    cur_node.child[left_size + i].setnull();
   }
   cur_node.node_size = left_size;
   right_node.node_size = right_size;
@@ -248,7 +249,14 @@ void Insomnia::BlinkTree<KeyType, ValueType, degree, capacity>::try_average() {
   NodePtr parent_ptr = route.back().second;
   route.pop_back();
 
-  bool has_left = !cur_node.prev.isnull(), has_right = !cur_node.next.isnull();
+  int l = 0, r = parent_node.node_size - 1;
+  while(l < r) {
+    int mid = (l + r) >> 1;
+    if(parent_node.kv[mid] < cur_node.kv[cur_node.node_size - 1]) l = mid + 1;
+    else r = mid;
+  }
+  assert(parent_node.kv[l] == cur_node.kv[cur_node.node_size - 1]);
+  bool has_left = (l != 0), has_right = (l != parent_node.node_size - 1); // You can pass this l to the functions.
   NodeType left_node, right_node;
   NodePtr left_ptr, right_ptr;
   while(true) {
@@ -313,12 +321,15 @@ void Insomnia::BlinkTree<KeyType, ValueType, degree, capacity>::merge(
     if(kv_pair > parent_node.kv[mid]) l = mid + 1;
     else r = mid;
   }
+  assert(parent_node.child[l] == left_ptr);
+  assert(parent_node.child[l + 1] == right_ptr);
   --parent_node.node_size;
   for(int i = l; i < parent_node.node_size; ++i) {
     parent_node.kv[i] = parent_node.kv[i + 1];
     parent_node.child[i] = parent_node.child[i + 1];
   }
   parent_node.child[l] = left_ptr;
+  parent_node.child[parent_node.node_size].setnull();
   multimap_fstream.write(parent_node, parent_ptr);
 }
 
@@ -338,6 +349,7 @@ void Insomnia::BlinkTree<KeyType, ValueType, degree, capacity>::average_from_lef
   for(int i = 0; i < diff; ++i) {
     right_node.kv[i] = left_node.kv[left_size + i];
     right_node.child[i] = left_node.child[left_size + i];
+    left_node.child[left_size + i].setnull();
   }
   left_node.node_size = left_size;
   right_node.node_size = right_size;
@@ -370,6 +382,8 @@ void Insomnia::BlinkTree<KeyType, ValueType, degree, capacity>::average_from_rig
     right_node.kv[i] = right_node.kv[diff + i];
     right_node.child[i] = right_node.child[diff + i];
   }
+  for(int i = right_size; i < right_node.node_size; ++i)
+    right_node.child[i].setnull();
   left_node.node_size = left_size;
   right_node.node_size = right_size;
   multimap_fstream.write(left_node, left_ptr);
